@@ -141,6 +141,9 @@ html = r'''<!DOCTYPE html>
       padding: 34px 0 44px;
     }
 
+    body.is-embedded .topbar { display: none; }
+    body.is-embedded .page { padding-top: 8px; }
+
     .topbar {
       display: flex;
       align-items: center;
@@ -567,6 +570,10 @@ html = r'''<!DOCTYPE html>
 
   <script src="../web/themes.js"></script>
   <script>
+    if (new URLSearchParams(window.location.search).get("embed") === "1") {
+      document.body.classList.add("is-embedded");
+    }
+
     const deck = __CARDS_JSON__;
 
     const card = document.getElementById("card");

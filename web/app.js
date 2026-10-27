@@ -494,16 +494,28 @@ function currentChatMessages() {
   return state.activeChat?.messages || [];
 }
 
+function viewHeader(label) {
+  return `
+    <div class="view-header" aria-label="LearningSpace ${escapeHtml(label)}">
+      <span class="view-mark">LS</span>
+      <span class="view-path">LEARNINGSPACE / ${escapeHtml(label)}</span>
+    </div>
+  `;
+}
+
 function renderChatView() {
   if (!state.activeChat) state.activeChat = makeChat();
   $("#content").innerHTML = `
-    <section class="chat-view">
-      <div class="chat-thread" id="chat-thread"></div>
-      <form class="chat-composer" id="chat-form">
-        <textarea id="chat-input" rows="1" placeholder="Ask about the assignment, a source, a concept, or what to study next..."></textarea>
-        <button class="button primary chat-send" type="submit" id="chat-send">Send</button>
-      </form>
-      <p class="chat-hint">Enter sends · Shift+Enter adds a line · The Plan agent does not edit files.</p>
+    <section class="view-frame">
+      ${viewHeader("CHAT")}
+      <section class="chat-view">
+        <div class="chat-thread" id="chat-thread"></div>
+        <form class="chat-composer" id="chat-form">
+          <textarea id="chat-input" rows="1" placeholder="Ask about the assignment, a source, a concept, or what to study next..."></textarea>
+          <button class="button primary chat-send" type="submit" id="chat-send">Send</button>
+        </form>
+        <p class="chat-hint">Enter sends · Shift+Enter adds a line · The Plan agent does not edit files.</p>
+      </section>
     </section>
   `;
   renderChatMessages();
@@ -627,6 +639,7 @@ function renderWorkspace() {
     : '<div class="empty-inline">No source files yet. Add slides, PDFs, handouts, or notes above.</div>';
 
   $("#content").innerHTML = `
+    ${viewHeader("WORKSPACE")}
     <div class="workspace-grid">
       <article class="card">
         <p class="card-kicker">Assignment input</p>
@@ -751,13 +764,13 @@ async function fetchMarkdown(path) {
   return response.text();
 }
 
-async function renderDocument(file) {
+async function renderDocument(file, label) {
   $("#content").innerHTML = '<div class="loading">Loading Markdown...</div>';
   try {
     const markdown = await fetchMarkdown(file);
-    $("#content").innerHTML = `<article class="prose">${renderMarkdown(markdown)}</article>`;
+    $("#content").innerHTML = `${viewHeader(label)}<article class="prose">${renderMarkdown(markdown)}</article>`;
   } catch (error) {
-    $("#content").innerHTML = `<div class="empty-state"><strong>File not found</strong><p>${escapeHtml(error.message)}</p></div>`;
+    $("#content").innerHTML = `${viewHeader(label)}<div class="empty-state"><strong>File not found</strong><p>${escapeHtml(error.message)}</p></div>`;
   }
 }
 
@@ -832,10 +845,10 @@ async function renderStudyGuide() {
       fetchMarkdown(views.study.file),
       fetchMarkdown(views.study.answers).catch(() => ""),
     ]);
-    $("#content").innerHTML = `<article class="prose">${renderMarkdown(guide)}</article>`;
+    $("#content").innerHTML = `${viewHeader("STUDY GUIDE")}<article class="prose">${renderMarkdown(guide)}</article>`;
     if (answerKey) enhancePracticeQuestions($(".prose"), parseAnswerKey(answerKey));
   } catch (error) {
-    $("#content").innerHTML = `<div class="empty-state"><strong>Study guide not found</strong><p>${escapeHtml(error.message)}</p></div>`;
+    $("#content").innerHTML = `${viewHeader("STUDY GUIDE")}<div class="empty-state"><strong>Study guide not found</strong><p>${escapeHtml(error.message)}</p></div>`;
   }
 }
 
@@ -844,6 +857,7 @@ function renderFlashcards() {
   const info = outputInfo(path);
   if (!info?.exists) {
     $("#content").innerHTML = `
+      ${viewHeader("FLASHCARDS")}
       <div class="empty-state">
         <strong>No browser deck yet</strong>
         <p>Ask the agent to generate flashcards, then finalize the workspace from OpenCode.</p>
@@ -852,11 +866,14 @@ function renderFlashcards() {
     return;
   }
 
-  const deckUrl = `/${path}?theme=${encodeURIComponent(state.theme)}&t=${state.flashcardsVersion}`;
+  const deckUrl = `/${path}?theme=${encodeURIComponent(state.theme)}&embed=1&t=${state.flashcardsVersion}`;
   $("#content").innerHTML = `
-    <div class="deck-shell">
-      <iframe id="flashcard-frame" title="LearningSpace flashcard deck" src="${deckUrl}"></iframe>
-    </div>
+    <section class="view-frame">
+      ${viewHeader("FLASHCARDS")}
+      <div class="deck-shell">
+        <iframe id="flashcard-frame" title="LearningSpace flashcard deck" src="${deckUrl}"></iframe>
+      </div>
+    </section>
   `;
   $("#flashcard-frame")?.addEventListener("load", syncFlashcardTheme);
   syncFlashcardTheme();
@@ -892,7 +909,7 @@ function render() {
       renderWorkspace();
       break;
     case "assignment":
-      renderDocument(views.assignment.file);
+      renderDocument(views.assignment.file, "ASSIGNMENT GUIDE");
       break;
     case "study":
       renderStudyGuide();
