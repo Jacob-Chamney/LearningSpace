@@ -32,7 +32,9 @@ OUTPUTS = [
     "Flashcards/flashcards.html",
 ]
 
-CHAT_MODEL = os.environ.get("OPENCODE_WEB_MODEL", "deepseek/deepseek-v4-pro")
+CHAT_MODEL = os.environ.get(
+    "OPENCODE_WEB_MODEL", "opencode/deepseek-v4.1-flash-free"
+)
 MAX_UPLOAD = 100 * 1024 * 1024
 MAX_GOAL = 500_000
 MAX_MESSAGE = 8_000

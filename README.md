@@ -121,6 +121,22 @@ into `input/`. Chat stays locked until at least one of these is present. Once
 the material is loaded, use the prompts above or choose **Generate selected** in
 **Workspace**.
 
+<p align="center">
+  <img src="assets/dashboard-workspace-orng.png" alt="LearningSpace Workspace tab in the Orng theme showing assignment instructions, course file upload, and the Generate card" width="100%">
+</p>
+
+To operate the Workspace:
+
+1. Paste the assignment instructions into the text area and select **Save
+   instructions**, or drop lecture notes and course documents into **Course
+   files**.
+2. Choose the outputs you want under **Study outputs**, then select **Generate
+   selected**. Chat and generation unlock automatically once content is present.
+3. Use **Chat** for questions after it unlocks, or open the generated guide and
+   flashcard tabs.
+
+The screenshot shows the initial locked Workspace state.
+
 <p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
 ## Workflow
@@ -205,7 +221,8 @@ flashcards are selected.
 
 The chat remains read-only. Generation is a separate explicit action.
 
-Generation uses the same model as chat by default. Override it with:
+Generation defaults to the free `opencode/deepseek-v4.1-flash-free` model too.
+Override it with:
 
 ```bash
 OPENCODE_WEB_GENERATE_MODEL=provider/model ./scripts/serve-dashboard.py
@@ -221,8 +238,9 @@ default is the custom LearningSpace palette. The landing art uses the OpenCode
   <img src="assets/dashboard-themes-orng.png" alt="LearningSpace appearance settings in the Orng theme showing the built-in theme choices" width="70%">
 </p>
 
-The helper chat uses the read-only Plan agent with `deepseek/deepseek-v4-pro`
-by default. Override it with:
+The helper chat uses the read-only Plan agent with
+`opencode/deepseek-v4.1-flash-free` by default. Generation uses the same model.
+Override it with:
 
 ```bash
 OPENCODE_WEB_MODEL=provider/model ./scripts/serve-dashboard.py
