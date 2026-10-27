@@ -13,6 +13,8 @@
   <strong>OpenCode 2.x</strong> · <strong>Obsidian vault</strong> · <strong>Python 3.x</strong> · <strong>MIT</strong>
 </p>
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Index
 
 | Start | Build | Reference |
@@ -22,6 +24,8 @@
 | [What gets created](#what-gets-created) | [Build a shareable template](#build-a-shareable-template) | [Checks](#checks) |
 | [Browser flashcards](#browser-flashcards) | [Test the installer](#test-the-installer) | [Reproducibility](#reproducibility) |
 | [Local dashboard](#local-dashboard) | [License](#license) | [Windows and WSL](#windows-and-wsl) |
+
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
 ## Overview
 
@@ -44,11 +48,16 @@ part of the assignment.
 - **Repeatable checks.** Verify formatting, source coverage, and output freshness
   before committing.
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Quick start
 
 ```bash
+# clone the template
 git clone https://github.com/Jacob-Chamney/LearningSpace.git
 cd LearningSpace
+
+# run the interactive installer
 ./install.sh
 ```
 
@@ -66,6 +75,7 @@ The installer:
 Then start OpenCode and connect a provider:
 
 ```bash
+# enter the workspace and connect a provider
 cd ~/LearningSpace
 opencode
 /connect
@@ -79,6 +89,8 @@ generate study guide
 generate flashcards
 ```
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Workflow
 
 <p align="center">
@@ -91,6 +103,8 @@ generate flashcards
 - `Flashcards/` uses only the study guide.
 - `Memory/` stores durable notes and session history.
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## What gets created
 
 | Output | Purpose | Built from |
@@ -102,6 +116,8 @@ generate flashcards
 | `Flashcards/flashcards.html` | Interactive browser flashcard deck | `Flashcards/flashcards.md` |
 | `Memory/` | Durable course, topic, project, and session notes | OpenCode sessions and manual notes |
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Browser flashcards
 
 Open `Flashcards/flashcards.html` directly in a browser, or use the dashboard.
@@ -112,6 +128,8 @@ No server is required for the standalone deck.
 - Press `S` to shuffle and `R` to reset.
 - Theme selection follows the dashboard when the deck is opened from it.
 - The Markdown file remains the source of truth; the HTML deck is generated.
+
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
 ## Local dashboard
 
@@ -153,6 +171,8 @@ Chat messages are sent to that model provider, and the Plan agent may inspect
 workspace files to answer. For a more conservative install, use `--no-opencode`,
 `--no-glow`, and `--skip-deps`.
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Installer options
 
 ```bash
@@ -162,9 +182,16 @@ workspace files to answer. For a more conservative install, use `--no-opencode`,
 Useful options:
 
 ```bash
+# use the default target non-interactively
 ./install.sh --target ~/LearningSpace --yes
+
+# skip OpenCode and Glow installation
 ./install.sh --target ~/LearningSpace --yes --no-opencode --no-glow
+
+# skip system dependency installation
 ./install.sh --target ~/LearningSpace --yes --skip-deps
+
+# skip the Learn launcher
 ./install.sh --target ~/LearningSpace --yes --no-command
 ```
 
@@ -174,11 +201,14 @@ Pin an OpenCode version when reproducibility matters:
 OPENCODE_VERSION=2.1.3 ./install.sh
 ```
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Test the installer
 
 Before running a full install, test it in an isolated temporary workspace:
 
 ```bash
+# run a safe, isolated install test
 ./test-install.sh
 ```
 
@@ -198,12 +228,15 @@ To inspect the temporary copy afterward:
 ./test-install.sh --keep
 ```
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Build a shareable template
 
 Do not distribute personal course material, generated guides, or session notes.
 Build a sanitized starter instead:
 
 ```bash
+# build a sanitized distributable template
 ./scripts/build-template.sh
 ```
 
@@ -217,6 +250,8 @@ The builder removes personal inputs, generated outputs, session history, project
 notes, `.obsidian` state, and Git history. It keeps the installer, checks,
 harness scripts, dashboard, memory skeleton, and documentation, then runs the
 template smoke test.
+
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
 ## OpenCode setup
 
@@ -239,6 +274,8 @@ The plugin:
 - skips duplicate summaries
 
 There are no external MCP servers configured.
+
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
 ## Memory vault
 
@@ -270,6 +307,8 @@ MEMORY_VAULT=MyVault opencode
 Also update the two `Memory/...` entries in `opencode.jsonc`. The `.obsidian/`
 folder is user-specific app state and is not part of the content standard.
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Checks
 
 Run one command after generating or editing outputs:
@@ -292,6 +331,8 @@ The manifest update is deliberate. The finalizer refuses to record a source
 change when no generated output changed, which catches forgotten
 regenerations. The Git pre-commit hook runs the same checks.
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Reproducibility
 
 For consistent results:
@@ -306,11 +347,15 @@ The workflow and checks are model-independent. Content is not byte-for-byte
 reproducible across models: extraction, wording, and ambiguous-source decisions
 still depend on the model.
 
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Windows and WSL
 
 The installer targets Linux, macOS, and WSL. On Windows, use WSL and keep the
 project inside the WSL filesystem, such as `~/LearningSpace`, rather than under
 `/mnt/c` for better performance.
+
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
 ## License
 
