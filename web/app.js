@@ -571,7 +571,6 @@ async function sendChat() {
   saveChats();
   state.chatBusy = true;
   input.value = "";
-  setHeading();
   renderSidebarHistory();
   renderChatMessages();
   const sendButton = $("#chat-send");
@@ -867,19 +866,6 @@ function outputInfo(path) {
   return state.status?.outputs?.find((item) => item.path === path);
 }
 
-function setHeading() {
-  const view = views[state.view] || views.chat;
-  if (state.view === "chat" && state.activeChat) {
-    $("#view-eyebrow").textContent = "Chat";
-    $("#view-title").textContent = state.activeChat.messages.length ? state.activeChat.title : "New chat";
-    $("#view-subtitle").textContent = views.chat.subtitle;
-    return;
-  }
-  $("#view-eyebrow").textContent = view.eyebrow;
-  $("#view-title").textContent = view.title;
-  $("#view-subtitle").textContent = view.subtitle;
-}
-
 function setActiveNav() {
   $$(".nav-item").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.view === state.view);
@@ -897,7 +883,6 @@ function showError(message) {
 function render() {
   document.body.dataset.view = state.view;
   setActiveNav();
-  setHeading();
   renderSidebarHistory();
   switch (state.view) {
     case "chat":
@@ -969,10 +954,6 @@ function bindEvents() {
   window.addEventListener("scroll", closeChatMenu, true);
   window.addEventListener("resize", closeChatMenu);
   $("#sidebar-toggle").addEventListener("click", toggleSidebar);
-  $("#sidebar-close").addEventListener("click", () => {
-    state.sidebarCollapsed = true;
-    applySidebarState();
-  });
   $("#settings").addEventListener("click", openSettings);
   $$("[data-close-settings]").forEach((element) => {
     element.addEventListener("click", closeSettings);
