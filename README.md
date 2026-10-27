@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner-orng.png" alt="LearningSpace banner" width="100%">
+  <img src="assets/banner-learning.png" alt="LearningSpace banner" width="100%">
 </p>
 
 <h1 align="center">LearningSpace</h1>

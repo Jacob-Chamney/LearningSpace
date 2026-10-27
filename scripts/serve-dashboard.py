@@ -82,8 +82,8 @@ STATIC_FILES = {
     "/StudyGuide/study-guide.md",
     "/StudyGuide/study-guide-answers.md",
     "/Flashcards/flashcards.html",
-    "/assets/banner-orng.png",
-    "/assets/banner-orng.svg",
+    "/assets/banner-learning.png",
+    "/assets/banner-learning.svg",
 }
 
 
