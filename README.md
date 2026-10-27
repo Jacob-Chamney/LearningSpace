@@ -445,9 +445,12 @@ exposure and has no dashboard authentication.
   proxy it, or expose it to a LAN or the public internet.
 - Do not put passwords, API keys, personal records, or other secrets in the
   workspace.
-- Chat prompts and any workspace files the Plan agent reads are sent to the
-  configured model provider. Review that provider's privacy and training
+- Chat prompts and any workspace files the Plan or Build agents read are sent
+  to the configured model provider. Review that provider's privacy and training
   policy before using sensitive material.
+- Dashboard generation runs the write-capable Build agent with auto-approved
+  permissions. Only generate from source documents you trust, and review
+  generated files before committing them.
 - Treat generated content as untrusted until you verify it against the source
   documents.
 - Do not use the workspace to bypass academic-integrity rules or to submit

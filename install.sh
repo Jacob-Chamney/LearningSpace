@@ -363,6 +363,8 @@ copy_workspace() {
       --exclude='./.git' \
       --exclude='./Memory/.obsidian' \
       --exclude='./.DS_Store' \
+      --exclude='*/__pycache__' \
+      --exclude='*.pyc' \
       -cf - .
   ) | (
     cd "$TARGET"

@@ -49,6 +49,8 @@ say "Building sanitized template in $TARGET..."
     --exclude='./Flashcards/flashcards.md' \
     --exclude='./Flashcards/flashcards.html' \
     --exclude='./.guide-manifest.json' \
+    --exclude='*/__pycache__' \
+    --exclude='*.pyc' \
     -cf - .
 ) | (
   cd "$TARGET"
