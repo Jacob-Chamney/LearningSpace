@@ -121,7 +121,6 @@ html = r'''<!DOCTYPE html>
       --violet: #a78bfa;
       --cyan: #22d3ee;
       --green: #34d399;
-      --shadow: 0 32px 80px rgba(0, 0, 0, 0.45);
     }
 
     * { box-sizing: border-box; }
@@ -260,7 +259,8 @@ html = r'''<!DOCTYPE html>
 
     .card-shell:focus-visible {
       border-radius: 28px;
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--indigo) 55%, transparent);
+      outline: 2px solid var(--indigo);
+      outline-offset: 2px;
     }
 
     .card-shell.is-flipped { transform: rotateY(180deg); }
@@ -316,7 +316,6 @@ html = r'''<!DOCTYPE html>
       border-radius: 50%;
       background: var(--cyan);
       content: "";
-      box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 90%, transparent);
     }
 
     .flip-hint, .answer-count {
@@ -365,7 +364,6 @@ html = r'''<!DOCTYPE html>
       border-radius: 50%;
       background: var(--cyan);
       content: "";
-      box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 35%, transparent);
     }
 
     .answer-list code, .sources code {

@@ -22,7 +22,6 @@
   --accent-soft: color-mix(in srgb, var(--cyan) 12%, transparent);
   --success-soft: color-mix(in srgb, var(--green) 16%, transparent);
   --danger-soft: color-mix(in srgb, var(--danger) 18%, transparent);
-  --shadow: 0 28px 70px rgba(0, 0, 0, 0.36);
   --radius: 14px;
 }
 
@@ -342,7 +341,6 @@ h1 {
   border: 0;
   border-radius: 0;
   background: transparent;
-  box-shadow: none;
 }
 .prose h1 {
   margin: 0 0 22px;
@@ -531,7 +529,6 @@ h1 {
   border-radius: 10px;
   color: var(--text);
   background: var(--panel-strong);
-  box-shadow: var(--shadow);
   font-size: 12px;
   opacity: 0;
   pointer-events: none;
@@ -603,7 +600,8 @@ h1 {
 }
 .goal-editor:focus {
   border-color: color-mix(in srgb, var(--indigo) 70%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--indigo) 12%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--indigo) 45%, transparent);
+  outline-offset: 1px;
 }
 .inline-hint {
   color: var(--subtle);
@@ -745,7 +743,8 @@ h1 {
 }
 .chat-form textarea:focus {
   border-color: color-mix(in srgb, var(--indigo) 70%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--indigo) 12%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--indigo) 45%, transparent);
+  outline-offset: 1px;
 }
 .chat-form .button { align-self: stretch; }
 .chat-hint {
@@ -811,7 +810,6 @@ body.settings-open { overflow: hidden; }
   position: absolute;
   inset: 0;
   background: color-mix(in srgb, var(--bg) 78%, transparent);
-  backdrop-filter: blur(14px);
 }
 .settings-panel {
   position: relative;
@@ -908,7 +906,7 @@ body.settings-open { overflow: hidden; }
 }
 .theme-option.is-active .theme-swatch::after {
   background: var(--swatch-primary);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--swatch-primary) 20%, transparent);
+  border-color: var(--swatch-primary);
 }
 .theme-label {
   overflow: hidden;
@@ -1307,7 +1305,8 @@ h1 {
 }
 .chat-composer textarea:focus {
   border-color: color-mix(in srgb, var(--indigo) 62%, transparent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--indigo) 12%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--indigo) 45%, transparent);
+  outline-offset: 1px;
 }
 .chat-composer .button { align-self: stretch; }
 .chat-hint {
@@ -1337,7 +1336,6 @@ h1 {
     width: 270px;
     height: 100dvh;
     background: var(--bg);
-    box-shadow: 18px 0 40px rgba(0, 0, 0, 0.28);
     transform: translateX(0);
     transition: transform 180ms ease;
   }
