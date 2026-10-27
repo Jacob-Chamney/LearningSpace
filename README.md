@@ -15,15 +15,30 @@
 
 <p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
+## Why this exists
+
+AI has stunned the way humans learn. It can answer almost anything instantly,
+but instant answers can short-circuit the productive struggle that makes
+learning stick. LearningSpace was built to push in the opposite direction:
+source material first, guidance second, and finished answers only when
+explicitly requested.
+
+This is not a shortcut for producing submissions. It is a workspace for reading
+the sources, building a plan, asking better questions, testing recall, and
+keeping a durable trail of what was learned. AI should be a tool, not a crutch.
+
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
 ## Index
 
 | Start | Build | Reference |
 | --- | --- | --- |
-| [Overview](#overview) | [Quick start](#quick-start) | [OpenCode setup](#opencode-setup) |
-| [Workflow](#workflow) | [Installer options](#installer-options) | [Memory vault](#memory-vault) |
+| [Why this exists](#why-this-exists) | [Quick start](#quick-start) | [OpenCode setup](#opencode-setup) |
+| [Overview](#overview) | [Installer options](#installer-options) | [Safety](#safety) |
+| [Workflow](#workflow) | [Test the installer](#test-the-installer) | [Memory vault](#memory-vault) |
 | [What gets created](#what-gets-created) | [Build a shareable template](#build-a-shareable-template) | [Checks](#checks) |
-| [Browser flashcards](#browser-flashcards) | [Test the installer](#test-the-installer) | [Reproducibility](#reproducibility) |
-| [Local dashboard](#local-dashboard) | [License](#license) | [Windows and WSL](#windows-and-wsl) |
+| [Browser flashcards](#browser-flashcards) | [License](#license) | [Reproducibility](#reproducibility) |
+| [Local dashboard](#local-dashboard) |  | [Windows and WSL](#windows-and-wsl) |
 
 <p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
@@ -356,6 +371,31 @@ project inside the WSL filesystem, such as `~/LearningSpace`, rather than under
 `/mnt/c` for better performance.
 
 <p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
+## Safety
+
+LearningSpace is a local, single-user tool. It is not hardened for public
+exposure and has no dashboard authentication.
+
+- Keep the dashboard bound to `127.0.0.1`. Do not port-forward it, reverse
+  proxy it, or expose it to a LAN or the public internet.
+- Do not put passwords, API keys, personal records, or other secrets in the
+  workspace.
+- Chat prompts and any workspace files the Plan agent reads are sent to the
+  configured model provider. Review that provider's privacy and training
+  policy before using sensitive material.
+- Treat generated content as untrusted until you verify it against the source
+  documents.
+- Do not use the workspace to bypass academic-integrity rules or to submit
+  work you do not understand.
+- Use a container or virtual machine when inspecting untrusted documents.
+- The installer's OpenCode installation uses the official `curl | bash` path
+  and may use `sudo` for optional tools. Use `--no-opencode`, `--no-glow`, and
+  `--skip-deps` if you do not want those actions.
+
+Do not use this project to expose yourself to exploits or vulnerabilities.
+Close the dashboard when you are not using it, and keep the workspace updated.
+
 
 ## License
 

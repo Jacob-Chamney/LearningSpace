@@ -1,29 +1,35 @@
 const state = {
   status: null,
   input: null,
-  view: "overview",
-  chat: [],
-  chatSession: null,
-  chatBusy: false,
+  view: "chat",
   theme: "learningspace",
+  chats: [],
+  activeChat: null,
+  chatBusy: false,
+  sidebarCollapsed: false,
   toastTimer: null,
   flashcardsVersion: Date.now(),
 };
 
 const views = {
-  overview: {
+  chat: {
+    eyebrow: "Chat",
+    title: "New chat",
+    subtitle: "Ask about the assignment, a source, a concept, or what to study next.",
+  },
+  workspace: {
     eyebrow: "Workspace",
-    title: "Overview",
-    subtitle: "Change assignment instructions, manage source files, and ask the agent for help.",
+    title: "Workspace",
+    subtitle: "Change assignment instructions and manage the documents the agent can use.",
   },
   assignment: {
-    eyebrow: "AssignmentGuide",
+    eyebrow: "Assignment",
     title: "Assignment guide",
     subtitle: "The current assignment plan, without the finished solution.",
     file: "AssignmentGuide/assignment-guide.md",
   },
   study: {
-    eyebrow: "StudyGuide",
+    eyebrow: "Study guide",
     title: "Study guide",
     subtitle: "Practice questions reveal answers inline. Markdown remains the source.",
     file: "StudyGuide/study-guide.md",
@@ -37,11 +43,22 @@ const views = {
 };
 
 const THEME_KEY = "learningspace-theme";
+const SIDEBAR_KEY = "learningspace-sidebar-collapsed";
+const CHAT_STORE_KEY = "learningspace-chats-v1";
+const ACTIVE_CHAT_KEY = "learningspace-active-chat";
+const LEGACY_CHAT_KEY = "learningspace-chat-history";
+const LEGACY_SESSION_KEY = "learningspace-chat-session";
 const THEMES = Array.isArray(window.LEARNINGSPACE_THEMES) ? window.LEARNINGSPACE_THEMES : [];
 
 const $ = (selector, root = document) => root.querySelector(selector);
-
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+function randomId(prefix) {
+  const value = typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID().replace(/-/g, "")
+    : String(Date.now()) + Math.random().toString(36).slice(2);
+  return `${prefix}${value}`;
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -95,7 +112,6 @@ function renderMarkdown(source) {
 
   for (const line of lines) {
     const trimmed = line.trim();
-
     if (trimmed.startsWith("```")) {
       flushParagraph();
       closeList();
@@ -111,25 +127,21 @@ function renderMarkdown(source) {
       }
       continue;
     }
-
     if (inCode) {
       codeLines.push(line);
       continue;
     }
-
     if (!trimmed) {
       flushParagraph();
       closeList();
       continue;
     }
-
     if (trimmed === "&nbsp;") {
       flushParagraph();
       closeList();
       html.push('<div class="md-space"></div>');
       continue;
     }
-
     const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
     if (heading) {
       flushParagraph();
@@ -137,35 +149,30 @@ function renderMarkdown(source) {
       html.push(`<h${heading[1].length}>${inlineMarkdown(heading[2])}</h${heading[1].length}>`);
       continue;
     }
-
     if (/^[-*]\s+/.test(trimmed)) {
       flushParagraph();
       openList("ul");
       html.push(`<li>${inlineMarkdown(trimmed.replace(/^[-*]\s+/, ""))}</li>`);
       continue;
     }
-
     if (/^\d+\.\s+/.test(trimmed)) {
       flushParagraph();
       openList("ol");
       html.push(`<li>${inlineMarkdown(trimmed.replace(/^\d+\.\s+/, ""))}</li>`);
       continue;
     }
-
     if (trimmed === "---") {
       flushParagraph();
       closeList();
       html.push("<hr>");
       continue;
     }
-
     if (trimmed.startsWith("> ")) {
       flushParagraph();
       closeList();
       html.push(`<blockquote>${inlineMarkdown(trimmed.slice(2))}</blockquote>`);
       continue;
     }
-
     paragraph.push(trimmed);
   }
 
@@ -207,35 +214,6 @@ async function copyText(value) {
     textarea.remove();
     showToast("Copied.");
   }
-}
-
-function outputInfo(path) {
-  return state.status?.outputs?.find((item) => item.path === path);
-}
-
-function statusChip(info) {
-  if (!info?.exists) return '<span class="chip missing"><span class="dot"></span>missing</span>';
-  return `<span class="chip ok"><span class="dot"></span>${formatBytes(info.size)}</span>`;
-}
-
-function setHeading(view) {
-  $("#view-eyebrow").textContent = view.eyebrow;
-  $("#view-title").textContent = view.title;
-  $("#view-subtitle").textContent = view.subtitle;
-}
-
-function setActiveNav() {
-  $$(".nav-item").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.view === state.view);
-  });
-}
-
-function showLoading() {
-  $("#content").innerHTML = '<div class="loading">Loading workspace…</div>';
-}
-
-function showError(message) {
-  $("#content").innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
 }
 
 function themeById(id) {
@@ -309,11 +287,7 @@ function renderThemeGrid() {
 }
 
 function getInitialTheme() {
-  try {
-    return localStorage.getItem(THEME_KEY) || "learningspace";
-  } catch {
-    return "learningspace";
-  }
+  try { return localStorage.getItem(THEME_KEY) || "learningspace"; } catch { return "learningspace"; }
 }
 
 function openSettings() {
@@ -343,7 +317,224 @@ async function loadInput() {
   state.input = await response.json();
 }
 
-function renderOverview() {
+function makeChat() {
+  return {
+    id: randomId("chat"),
+    sessionID: randomId("ses_web"),
+    title: "New chat",
+    messages: [],
+    updatedAt: Date.now(),
+  };
+}
+
+function chatTitleFromMessage(message) {
+  const clean = message.replace(/\s+/g, " ").trim();
+  return clean.length > 52 ? `${clean.slice(0, 49).trim()}...` : clean || "New chat";
+}
+
+function loadChats() {
+  let chats = [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CHAT_STORE_KEY) || "[]");
+    if (Array.isArray(parsed)) chats = parsed.filter((chat) => chat && chat.id && chat.sessionID);
+  } catch { chats = []; }
+
+  if (!chats.length) {
+    try {
+      const legacy = JSON.parse(localStorage.getItem(LEGACY_CHAT_KEY) || "[]");
+      if (Array.isArray(legacy) && legacy.length) {
+        const session = localStorage.getItem(LEGACY_SESSION_KEY) || randomId("ses_web");
+        const firstUser = legacy.find((message) => message.role === "user" && message.text);
+        const chat = {
+          id: randomId("chat"),
+          sessionID: session,
+          title: chatTitleFromMessage(firstUser?.text || ""),
+          messages: legacy.filter((message) => message && message.text),
+          updatedAt: Date.now(),
+        };
+        chats = [chat];
+      }
+    } catch { /* ignore */ }
+  }
+
+  state.chats = chats;
+  let activeId = "";
+  try { activeId = localStorage.getItem(ACTIVE_CHAT_KEY) || ""; } catch { activeId = ""; }
+  state.activeChat = state.chats.find((chat) => chat.id === activeId) || state.chats[0] || makeChat();
+}
+
+function saveChats() {
+  try {
+    localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(state.chats.slice(-30)));
+    localStorage.setItem(ACTIVE_CHAT_KEY, state.activeChat?.id || "");
+  } catch { /* ignore */ }
+}
+
+function renderSidebarHistory() {
+  const container = $("#chat-history");
+  if (!container) return;
+  const chats = [...state.chats].sort((a, b) => b.updatedAt - a.updatedAt);
+  if (!chats.length) {
+    container.innerHTML = '<p class="history-empty">No conversations yet.</p>';
+    return;
+  }
+  container.innerHTML = chats.map((chat) => `
+    <button class="history-item ${state.activeChat?.id === chat.id ? "is-active" : ""}" type="button" data-chat-id="${escapeHtml(chat.id)}">
+      ${escapeHtml(chat.title)}
+    </button>
+  `).join("");
+  $$(".history-item", container).forEach((button) => {
+    button.addEventListener("click", () => activateChat(button.dataset.chatId));
+  });
+}
+
+function activateChat(id) {
+  if (state.chatBusy) {
+    showToast("Wait for the current response first.");
+    return;
+  }
+  const chat = state.chats.find((item) => item.id === id);
+  if (!chat) return;
+  state.activeChat = chat;
+  state.view = "chat";
+  collapseSidebarOnMobile();
+  saveChats();
+  render();
+}
+
+function startNewChat() {
+  if (state.chatBusy) {
+    showToast("Wait for the current response first.");
+    return;
+  }
+  state.activeChat = makeChat();
+  state.view = "chat";
+  collapseSidebarOnMobile();
+  saveChats();
+  render();
+  $("#chat-input")?.focus();
+}
+
+function currentChatMessages() {
+  return state.activeChat?.messages || [];
+}
+
+function renderChatView() {
+  if (!state.activeChat) state.activeChat = makeChat();
+  $("#content").innerHTML = `
+    <section class="chat-view">
+      <div class="chat-thread" id="chat-thread"></div>
+      <form class="chat-composer" id="chat-form">
+        <textarea id="chat-input" rows="1" placeholder="Ask about the assignment, a source, a concept, or what to study next..."></textarea>
+        <button class="button primary chat-send" type="submit" id="chat-send">Send</button>
+      </form>
+      <p class="chat-hint">Enter sends · Shift+Enter adds a line · The Plan agent does not edit files.</p>
+    </section>
+  `;
+  renderChatMessages();
+  $("#chat-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    sendChat();
+  });
+  $("#chat-input").addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendChat();
+    }
+  });
+  $$("[data-suggestion]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const input = $("#chat-input");
+      input.value = button.dataset.suggestion;
+      input.focus();
+    });
+  });
+}
+
+function renderChatMessages() {
+  const thread = $("#chat-thread");
+  if (!thread) return;
+  const messages = currentChatMessages();
+  if (!messages.length) {
+    thread.innerHTML = `
+      <div class="chat-welcome">
+        <p class="eyebrow">LearningSpace</p>
+        <h2>How can I help with your coursework?</h2>
+        <p>Ask about the assignment, a source document, a concept, or what to review next.</p>
+        <div class="chat-suggestions">
+          <button type="button" data-suggestion="Summarize the assignment plan.">Summarize the assignment plan</button>
+          <button type="button" data-suggestion="Quiz me on the study guide.">Quiz me on the study guide</button>
+          <button type="button" data-suggestion="What should I review first?">What should I review first</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  thread.innerHTML = messages.map((message) => {
+    if (message.role === "user") {
+      return `<div class="chat-message user"><div class="chat-bubble">${escapeHtml(message.text)}</div></div>`;
+    }
+    return `<div class="chat-message assistant"><div class="assistant-mark">LS</div><div class="assistant-content">${message.pending ? '<span class="typing">Thinking...</span>' : renderMarkdown(message.text)}</div></div>`;
+  }).join("");
+  thread.scrollTop = thread.scrollHeight;
+}
+
+async function sendChat() {
+  if (state.chatBusy) return;
+  const input = $("#chat-input");
+  const message = input.value.trim();
+  if (!message) return;
+  if (!state.activeChat) state.activeChat = makeChat();
+
+  const chat = state.activeChat;
+  chat.messages.push({ role: "user", text: message });
+  chat.messages.push({ role: "assistant", text: "", pending: true });
+  if (chat.title === "New chat") chat.title = chatTitleFromMessage(message);
+  chat.updatedAt = Date.now();
+  if (!state.chats.some((item) => item.id === chat.id)) state.chats.push(chat);
+  saveChats();
+  state.chatBusy = true;
+  input.value = "";
+  setHeading();
+  renderSidebarHistory();
+  renderChatMessages();
+  const sendButton = $("#chat-send");
+  const newChatButton = $("#new-chat-top");
+  if (sendButton) sendButton.disabled = true;
+  if (newChatButton) newChatButton.disabled = true;
+
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, sessionID: chat.sessionID }),
+    });
+    const result = await response.json();
+    const pending = chat.messages[chat.messages.length - 1];
+    if (!pending) return;
+    pending.pending = false;
+    pending.text = result.ok ? result.text : `**Agent error:** ${result.error || "The agent could not answer."}`;
+    chat.updatedAt = Date.now();
+    saveChats();
+    renderSidebarHistory();
+    if (state.activeChat?.id === chat.id) renderChatMessages();
+  } catch (error) {
+    const pending = chat.messages[chat.messages.length - 1];
+    if (!pending) return;
+    pending.pending = false;
+    pending.text = `**Connection error:** ${error.message}`;
+    saveChats();
+    if (state.activeChat?.id === chat.id) renderChatMessages();
+  } finally {
+    state.chatBusy = false;
+    if (sendButton) sendButton.disabled = false;
+    if (newChatButton) newChatButton.disabled = false;
+    $("#chat-input")?.focus();
+  }
+}
+
+function renderWorkspace() {
   if (!state.input) {
     showLoading();
     return;
@@ -362,8 +553,8 @@ function renderOverview() {
     : '<div class="empty-inline">No source files yet. Add slides, PDFs, handouts, or notes above.</div>';
 
   $("#content").innerHTML = `
-    <div class="grid">
-      <article class="card wide">
+    <div class="workspace-grid">
+      <article class="card">
         <p class="card-kicker">Assignment input</p>
         <h2>Assignment instructions</h2>
         <p>Edit <code>input/assignmentGoal.txt</code>. This is the authoritative instruction file for the assignment guide.</p>
@@ -374,7 +565,7 @@ function renderOverview() {
         </div>
       </article>
 
-      <article class="card wide">
+      <article class="card">
         <p class="card-kicker">Input sources</p>
         <h2>Course files</h2>
         <p>Add or remove the documents the agent should use. Files are written directly to <code>input/</code>.</p>
@@ -385,23 +576,6 @@ function renderOverview() {
           <input type="file" id="file-input" multiple hidden>
         </div>
         <div class="file-list" id="source-list">${fileRows}</div>
-      </article>
-
-      <article class="card wide chat-card">
-        <div class="chat-header">
-          <div>
-            <p class="card-kicker">Ask the agent</p>
-            <h2>Questions and help</h2>
-            <p>Use the read-only Plan agent for questions about the assignment, sources, or study strategy.</p>
-          </div>
-          <button class="button small ghost" type="button" id="new-chat">New chat</button>
-        </div>
-        <div class="chat-messages" id="chat-messages"></div>
-        <form class="chat-form" id="chat-form">
-          <textarea id="chat-input" rows="2" placeholder="Ask about the assignment, a slide, a concept, or what to study next…"></textarea>
-          <button class="button primary" type="submit" id="chat-send">Send</button>
-        </form>
-        <p class="chat-hint">Enter sends · Shift+Enter adds a line · Plan mode does not edit files.</p>
       </article>
     </div>
   `;
@@ -434,19 +608,6 @@ function renderOverview() {
   $$(".remove-file").forEach((button) => {
     button.addEventListener("click", () => removeFile(button.dataset.name));
   });
-
-  $("#new-chat").addEventListener("click", newChat);
-  $("#chat-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    sendChat();
-  });
-  $("#chat-input").addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      sendChat();
-    }
-  });
-  renderChatMessages();
 }
 
 async function saveGoal() {
@@ -491,7 +652,7 @@ async function uploadFiles(fileList) {
     }
   }
   await loadInput();
-  renderOverview();
+  renderWorkspace();
   if (draft !== undefined && $("#goal-editor")) $("#goal-editor").value = draft;
   showToast(files.length === 1 ? "Source file added." : "Source files added.");
 }
@@ -503,117 +664,11 @@ async function removeFile(name) {
     const result = await response.json();
     if (!result.ok) throw new Error(result.error || "Remove failed");
     await loadInput();
-    renderOverview();
+    renderWorkspace();
     showToast("Source file removed.");
   } catch (error) {
     showToast(error.message);
   }
-}
-
-function getChatSession() {
-  if (state.chatSession) return state.chatSession;
-  let value = "";
-  try {
-    value = localStorage.getItem("learningspace-chat-session") || "";
-  } catch {
-    value = "";
-  }
-  if (!/^ses_[A-Za-z0-9]+$/.test(value)) {
-    const random = typeof crypto !== "undefined" && crypto.randomUUID
-      ? crypto.randomUUID().replace(/-/g, "")
-      : String(Date.now());
-    value = `ses_web${random}`;
-    try { localStorage.setItem("learningspace-chat-session", value); } catch { /* ignore */ }
-  }
-  state.chatSession = value;
-  return value;
-}
-
-function loadChat() {
-  try {
-    const saved = localStorage.getItem("learningspace-chat-history");
-    state.chat = saved ? JSON.parse(saved) : [];
-    if (!Array.isArray(state.chat)) state.chat = [];
-  } catch {
-    state.chat = [];
-  }
-}
-
-function saveChat() {
-  try { localStorage.setItem("learningspace-chat-history", JSON.stringify(state.chat.slice(-40))); } catch { /* ignore */ }
-}
-
-function renderChatMessages() {
-  const container = $("#chat-messages");
-  if (!container) return;
-  if (!state.chat.length) {
-    container.innerHTML = '<div class="chat-empty">Ask a question about the assignment, a source document, or how to study.</div>';
-    return;
-  }
-  container.innerHTML = state.chat.map((message) => {
-    if (message.role === "user") {
-      return `<div class="chat-row user"><div class="chat-bubble user">${escapeHtml(message.text)}</div></div>`;
-    }
-    return `<div class="chat-row assistant"><div class="chat-bubble assistant">${message.pending ? '<span class="typing">Thinking…</span>' : renderMarkdown(message.text)}</div></div>`;
-  }).join("");
-  container.scrollTop = container.scrollHeight;
-}
-
-async function sendChat() {
-  if (state.chatBusy) return;
-  const input = $("#chat-input");
-  const message = input.value.trim();
-  if (!message) return;
-
-  state.chatBusy = true;
-  state.chat.push({ role: "user", text: message });
-  state.chat.push({ role: "assistant", text: "", pending: true });
-  saveChat();
-  input.value = "";
-  renderChatMessages();
-  const sendButton = $("#chat-send");
-  const newChatButton = $("#new-chat");
-  if (sendButton) sendButton.disabled = true;
-  if (newChatButton) newChatButton.disabled = true;
-
-  try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, sessionID: getChatSession() }),
-    });
-    const result = await response.json();
-    const pending = state.chat[state.chat.length - 1];
-    if (!pending) return;
-    pending.pending = false;
-    pending.text = result.ok ? result.text : `**Agent error:** ${result.error || "The agent could not answer."}`;
-    saveChat();
-    renderChatMessages();
-  } catch (error) {
-    const pending = state.chat[state.chat.length - 1];
-    if (!pending) return;
-    pending.pending = false;
-    pending.text = `**Connection error:** ${error.message}`;
-    saveChat();
-    renderChatMessages();
-  } finally {
-    state.chatBusy = false;
-    if (sendButton) sendButton.disabled = false;
-    if (newChatButton) newChatButton.disabled = false;
-    $("#chat-input")?.focus();
-  }
-}
-
-function newChat() {
-  if (state.chatBusy) return;
-  state.chat = [];
-  state.chatSession = null;
-  try {
-    localStorage.removeItem("learningspace-chat-history");
-    localStorage.removeItem("learningspace-chat-session");
-  } catch { /* ignore */ }
-  renderChatMessages();
-  showToast("New conversation.");
 }
 
 async function fetchMarkdown(path) {
@@ -641,7 +696,7 @@ function bindPathCopy(root) {
 }
 
 async function renderDocument(file) {
-  $("#content").innerHTML = '<div class="loading">Loading Markdown…</div>';
+  $("#content").innerHTML = '<div class="loading">Loading Markdown...</div>';
   try {
     const markdown = await fetchMarkdown(file);
     $("#content").innerHTML = `${docToolbar(file)}<article class="prose">${renderMarkdown(markdown)}</article>`;
@@ -716,7 +771,7 @@ function enhancePracticeQuestions(root, answers) {
 }
 
 async function renderStudyGuide() {
-  $("#content").innerHTML = '<div class="loading">Loading study guide…</div>';
+  $("#content").innerHTML = '<div class="loading">Loading study guide...</div>';
   try {
     const [guide, answerKey] = await Promise.all([
       fetchMarkdown(views.study.file),
@@ -724,9 +779,7 @@ async function renderStudyGuide() {
     ]);
     $("#content").innerHTML = `${docToolbar(views.study.file)}<article class="prose">${renderMarkdown(guide)}</article>`;
     bindPathCopy($("#content"));
-    if (answerKey) {
-      enhancePracticeQuestions($(".prose"), parseAnswerKey(answerKey));
-    }
+    if (answerKey) enhancePracticeQuestions($(".prose"), parseAnswerKey(answerKey));
   } catch (error) {
     $("#content").innerHTML = `<div class="empty-state"><strong>Study guide not found</strong><p>${escapeHtml(error.message)}</p></div>`;
   }
@@ -757,22 +810,52 @@ function renderFlashcards() {
       <iframe id="flashcard-frame" title="LearningSpace flashcard deck" src="${deckUrl}"></iframe>
     </div>
   `;
-
   $("#flashcard-frame")?.addEventListener("load", syncFlashcardTheme);
   syncFlashcardTheme();
 }
 
-function render() {
-  setActiveNav();
-  setHeading(views[state.view]);
-  if (!state.status && state.view !== "overview") {
-    showLoading();
+function outputInfo(path) {
+  return state.status?.outputs?.find((item) => item.path === path);
+}
+
+function setHeading() {
+  const view = views[state.view] || views.chat;
+  if (state.view === "chat" && state.activeChat) {
+    $("#view-eyebrow").textContent = "Chat";
+    $("#view-title").textContent = state.activeChat.messages.length ? state.activeChat.title : "New chat";
+    $("#view-subtitle").textContent = views.chat.subtitle;
     return;
   }
+  $("#view-eyebrow").textContent = view.eyebrow;
+  $("#view-title").textContent = view.title;
+  $("#view-subtitle").textContent = view.subtitle;
+}
 
+function setActiveNav() {
+  $$(".nav-item").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.view === state.view);
+  });
+}
+
+function showLoading() {
+  $("#content").innerHTML = '<div class="loading">Loading workspace...</div>';
+}
+
+function showError(message) {
+  $("#content").innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+}
+
+function render() {
+  document.body.dataset.view = state.view;
+  setActiveNav();
+  setHeading();
+  renderSidebarHistory();
   switch (state.view) {
-    case "overview":
-      renderOverview();
+    case "chat":
+      renderChatView();
+      break;
+    case "workspace":
+      renderWorkspace();
       break;
     case "assignment":
       renderDocument(views.assignment.file);
@@ -784,23 +867,49 @@ function render() {
       renderFlashcards();
       break;
     default:
-      renderOverview();
+      renderChatView();
   }
 }
 
+function collapseSidebarOnMobile() {
+  if (window.innerWidth <= 900) {
+    state.sidebarCollapsed = true;
+    applySidebarState();
+  }
+}
+
+function applySidebarState() {
+  document.body.classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
+  const button = $("#sidebar-toggle");
+  if (button) {
+    button.setAttribute("aria-expanded", String(!state.sidebarCollapsed));
+    button.setAttribute("aria-label", state.sidebarCollapsed ? "Show sidebar" : "Hide sidebar");
+  }
+  try { localStorage.setItem(SIDEBAR_KEY, state.sidebarCollapsed ? "1" : "0"); } catch { /* ignore */ }
+}
+
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  applySidebarState();
+}
+
 async function setView(view) {
+  if (!views[view]) return;
   state.view = view;
   window.location.hash = view;
-  if (view === "overview" && !state.input) {
+  if (view === "workspace" && !state.input) {
     try { await loadInput(); } catch { /* handled by render */ }
   }
+  if (view === "chat" && !state.activeChat) state.activeChat = makeChat();
+  collapseSidebarOnMobile();
+  saveChats();
   render();
 }
 
 async function refresh() {
   try {
     const tasks = [loadStatus()];
-    if (state.view === "overview") tasks.push(loadInput());
+    if (state.view === "workspace") tasks.push(loadInput());
     await Promise.all(tasks);
     render();
     showToast("Workspace refreshed.");
@@ -813,6 +922,12 @@ function bindEvents() {
   $$(".nav-item").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
+  $("#new-chat-top").addEventListener("click", startNewChat);
+  $("#sidebar-toggle").addEventListener("click", toggleSidebar);
+  $("#sidebar-close").addEventListener("click", () => {
+    state.sidebarCollapsed = true;
+    applySidebarState();
+  });
   $("#refresh").addEventListener("click", refresh);
   $("#settings").addEventListener("click", openSettings);
   $$("[data-close-settings]").forEach((element) => {
@@ -822,24 +937,37 @@ function bindEvents() {
     if (event.key === "Escape" && !$("#settings-modal").hidden) closeSettings();
   });
   window.addEventListener("hashchange", () => {
-    const view = window.location.hash.slice(1);
+    let view = window.location.hash.slice(1);
+    if (view === "overview") view = "workspace";
     if (views[view] && view !== state.view) {
       state.view = view;
-      if (view === "overview") loadInput().then(render).catch(() => render());
+      if (view === "workspace" && !state.input) loadInput().then(render).catch(() => render());
       else render();
     }
   });
 }
 
+function loadSidebarState() {
+  let saved = "";
+  try { saved = localStorage.getItem(SIDEBAR_KEY) || ""; } catch { saved = ""; }
+  if (saved === "1") state.sidebarCollapsed = true;
+  else if (saved === "0") state.sidebarCollapsed = false;
+  else state.sidebarCollapsed = window.innerWidth <= 900;
+  applySidebarState();
+}
+
 async function init() {
   applyTheme(getInitialTheme(), false);
+  loadSidebarState();
+  loadChats();
   bindEvents();
-  const initial = window.location.hash.slice(1);
+  let initial = window.location.hash.slice(1);
+  if (initial === "overview") initial = "workspace";
   if (views[initial]) state.view = initial;
-  loadChat();
+  if (state.view === "chat" && !state.activeChat) state.activeChat = makeChat();
   try {
     const tasks = [loadStatus()];
-    if (state.view === "overview") tasks.push(loadInput());
+    if (state.view === "workspace") tasks.push(loadInput());
     await Promise.all(tasks);
     render();
   } catch (error) {

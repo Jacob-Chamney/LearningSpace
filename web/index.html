@@ -4,14 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#080b16">
+  <meta name="theme-color" content="#0a0a0a">
   <title>LearningSpace Workspace</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app">
-    <aside class="sidebar">
-      <a class="brand" href="#overview" data-view="overview" aria-label="LearningSpace overview">
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-close" id="sidebar-close" type="button" aria-label="Close sidebar">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+
+      <a class="brand" href="#chat" data-view="chat" aria-label="LearningSpace home">
         <span class="brand-mark">LS</span>
         <span>
           <strong>LearningSpace</strong>
@@ -19,20 +25,41 @@
         </span>
       </a>
 
+      <button class="new-chat" type="button" id="new-chat-top">
+        <span class="plus-mark" aria-hidden="true">+</span>
+        New chat
+      </button>
+
       <nav class="nav" aria-label="Workspace sections">
-        <button type="button" data-view="overview" class="nav-item is-active">Overview</button>
+        <button type="button" data-view="chat" class="nav-item is-active">Chat</button>
+        <button type="button" data-view="workspace" class="nav-item">Workspace</button>
         <button type="button" data-view="assignment" class="nav-item">Assignment guide</button>
         <button type="button" data-view="study" class="nav-item">Study guide</button>
         <button type="button" data-view="flashcards" class="nav-item">Flashcards</button>
       </nav>
+
+      <section class="history-block" aria-labelledby="history-title">
+        <div class="history-head">
+          <h2 id="history-title">Recents</h2>
+        </div>
+        <div class="chat-history" id="chat-history"></div>
+      </section>
     </aside>
 
     <main class="main">
       <header class="topbar">
-        <div class="heading">
-          <p class="eyebrow" id="view-eyebrow">Workspace</p>
-          <h1 id="view-title">Overview</h1>
-          <p class="subtitle" id="view-subtitle">Manage the input and ask the agent for help.</p>
+        <div class="topbar-left">
+          <button class="icon-button" id="sidebar-toggle" type="button" aria-label="Hide sidebar" aria-expanded="true" aria-controls="sidebar">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+              <path d="M9 4v16"></path>
+            </svg>
+          </button>
+          <div class="heading">
+            <p class="eyebrow" id="view-eyebrow">Chat</p>
+            <h1 id="view-title">New chat</h1>
+            <p class="subtitle" id="view-subtitle">Ask about the assignment, a source, a concept, or what to study next.</p>
+          </div>
         </div>
         <div class="top-actions">
           <button type="button" class="button ghost" id="refresh">Refresh</button>
