@@ -88,7 +88,18 @@ STATIC_FILES = {
 
 
 def normalized_path(raw_path: str) -> str:
-    raw = unquote(urlparse(raw_path).path)
+    raw = urlparse(raw_path).path
+    # Decode repeatedly so double- and triple-encoded dot segments cannot
+    # bypass the static allowlist after the HTTP handler decodes them again.
+    for _ in range(5):
+        decoded = unquote(raw)
+        if decoded == raw:
+            break
+        raw = decoded
+    else:
+        return "/__invalid_path__"
+    if "\x00" in raw or "\\" in raw:
+        return "/__invalid_path__"
     trailing = raw.endswith("/") and raw != "/"
     path = posixpath.normpath(raw)
     if not path.startswith("/"):
@@ -99,7 +110,9 @@ def normalized_path(raw_path: str) -> str:
 
 
 def allowed_static(path: str) -> bool:
-    return path.startswith("/web/") or path in STATIC_FILES
+    if path.startswith("/web/") and ".." not in path.split("/"):
+        return True
+    return path in STATIC_FILES
 
 
 class DashboardHandler(SimpleHTTPRequestHandler):
