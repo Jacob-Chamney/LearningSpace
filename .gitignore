@@ -1,0 +1,8 @@
+# Local editor and workspace state
+Memory/.obsidian/workspace.json
+Memory/.obsidian/workspace-mobile.json
+.DS_Store
+*.swp
+
+# Generated release/template output
+dist/
