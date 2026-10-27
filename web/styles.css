@@ -314,27 +314,6 @@ h1 {
 }
 .file-meta { flex-shrink: 0; color: var(--subtle); font-size: 10px; }
 
-.doc-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--panel-strong) 42%, transparent);
-}
-.doc-toolbar span {
-  overflow: hidden;
-  color: var(--muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.doc-actions { display: flex; flex-shrink: 0; gap: 6px; }
-
 .prose {
   max-width: 820px;
   padding: 8px 0 24px;
@@ -569,9 +548,6 @@ h1 {
   .button { min-height: 38px; padding: 8px 10px; }
   .prose { padding: 18px; }
   .deck-shell iframe { min-height: 720px; height: 80vh; }
-  .doc-toolbar { align-items: flex-start; flex-direction: column; }
-  .doc-actions { width: 100%; }
-  .doc-actions .button { flex: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1317,7 +1293,6 @@ h1 {
   text-align: center;
 }
 
-.doc-toolbar,
 .prose {
   width: min(820px, 100%);
   margin-right: auto;
@@ -1527,4 +1502,22 @@ h1 {
 
 @media (max-width: 900px) {
   .history-menu-button { opacity: 1; }
+}
+
+/* Flashcards occupy the full content area */
+body[data-view="flashcards"] .content {
+  padding: 0;
+  overflow: hidden;
+}
+body[data-view="flashcards"] .deck-shell {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg);
+}
+body[data-view="flashcards"] .deck-shell iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }

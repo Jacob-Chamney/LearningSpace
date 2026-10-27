@@ -202,21 +202,6 @@ function showToast(message) {
   state.toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 2800);
 }
 
-async function copyText(value) {
-  try {
-    await navigator.clipboard.writeText(value);
-    showToast("Copied.");
-  } catch {
-    const textarea = document.createElement("textarea");
-    textarea.value = value;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    textarea.remove();
-    showToast("Copied.");
-  }
-}
-
 function themeById(id) {
   return THEMES.find((theme) => theme.id === id) || THEMES[0];
 }
@@ -767,30 +752,11 @@ async function fetchMarkdown(path) {
   return response.text();
 }
 
-function docToolbar(path) {
-  return `
-    <div class="doc-toolbar">
-      <span>${escapeHtml(path)}</span>
-      <div class="doc-actions">
-        <a class="button small ghost" href="/${escapeHtml(path)}" target="_blank" rel="noreferrer">Open .md</a>
-        <button class="button small ghost" type="button" data-copy="${escapeHtml(path)}">Copy path</button>
-      </div>
-    </div>
-  `;
-}
-
-function bindPathCopy(root) {
-  $$("[data-copy]", root).forEach((button) => {
-    button.addEventListener("click", () => copyText(button.dataset.copy));
-  });
-}
-
 async function renderDocument(file) {
   $("#content").innerHTML = '<div class="loading">Loading Markdown...</div>';
   try {
     const markdown = await fetchMarkdown(file);
-    $("#content").innerHTML = `${docToolbar(file)}<article class="prose">${renderMarkdown(markdown)}</article>`;
-    bindPathCopy($("#content"));
+    $("#content").innerHTML = `<article class="prose">${renderMarkdown(markdown)}</article>`;
   } catch (error) {
     $("#content").innerHTML = `<div class="empty-state"><strong>File not found</strong><p>${escapeHtml(error.message)}</p></div>`;
   }
@@ -867,8 +833,7 @@ async function renderStudyGuide() {
       fetchMarkdown(views.study.file),
       fetchMarkdown(views.study.answers).catch(() => ""),
     ]);
-    $("#content").innerHTML = `${docToolbar(views.study.file)}<article class="prose">${renderMarkdown(guide)}</article>`;
-    bindPathCopy($("#content"));
+    $("#content").innerHTML = `<article class="prose">${renderMarkdown(guide)}</article>`;
     if (answerKey) enhancePracticeQuestions($(".prose"), parseAnswerKey(answerKey));
   } catch (error) {
     $("#content").innerHTML = `<div class="empty-state"><strong>Study guide not found</strong><p>${escapeHtml(error.message)}</p></div>`;
@@ -890,12 +855,6 @@ function renderFlashcards() {
 
   const deckUrl = `/${path}?theme=${encodeURIComponent(state.theme)}&t=${state.flashcardsVersion}`;
   $("#content").innerHTML = `
-    <div class="doc-toolbar">
-      <span>${escapeHtml(path)}</span>
-      <div class="doc-actions">
-        <a class="button small ghost" href="${deckUrl}" target="_blank" rel="noreferrer">Open deck</a>
-      </div>
-    </div>
     <div class="deck-shell">
       <iframe id="flashcard-frame" title="LearningSpace flashcard deck" src="${deckUrl}"></iframe>
     </div>
