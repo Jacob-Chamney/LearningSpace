@@ -7,6 +7,39 @@
   <meta name="theme-color" content="#0a0a0a">
   <title>LearningSpace Workspace</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="themes.js"></script>
+  <script>
+    (() => {
+      const fallback = "learningspace";
+      let selected = fallback;
+      try { selected = localStorage.getItem("learningspace-theme") || fallback; } catch { /* ignore */ }
+      const themes = Array.isArray(window.LEARNINGSPACE_THEMES) ? window.LEARNINGSPACE_THEMES : [];
+      const theme = themes.find((item) => item.id === selected) || themes[0];
+      if (!theme) return;
+      const colors = theme.colors;
+      const variables = {
+        "--bg": colors.bg,
+        "--bg-soft": colors.bgSoft,
+        "--bg-deep": colors.bgDeep,
+        "--panel-strong": colors.panelStrong,
+        "--text": colors.text,
+        "--muted": colors.muted,
+        "--theme-border": colors.line,
+        "--theme-border-strong": colors.lineStrong,
+        "--indigo": colors.primary,
+        "--violet": colors.secondary,
+        "--cyan": colors.accent,
+        "--green": colors.success,
+        "--amber": colors.warning,
+        "--danger": colors.danger,
+      };
+      for (const [name, value] of Object.entries(variables)) {
+        if (value) document.documentElement.style.setProperty(name, value);
+      }
+      document.documentElement.dataset.theme = theme.id;
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", colors.bg);
+    })();
+  </script>
 </head>
 <body>
   <button class="icon-button sidebar-toggle-fixed" id="sidebar-toggle" type="button" aria-label="Hide sidebar" aria-expanded="true" aria-controls="sidebar">
@@ -81,7 +114,6 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="themes.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

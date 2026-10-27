@@ -972,6 +972,9 @@ function bindEvents() {
   window.addEventListener("resize", closeChatMenu);
   $("#sidebar-toggle").addEventListener("click", toggleSidebar);
   $("#settings").addEventListener("click", openSettings);
+  window.addEventListener("storage", (event) => {
+    if (event.key === THEME_KEY) applyTheme(event.newValue || "learningspace", false);
+  });
   $$("[data-close-settings]").forEach((element) => {
     element.addEventListener("click", closeSettings);
   });
