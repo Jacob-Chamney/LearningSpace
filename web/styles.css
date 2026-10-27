@@ -1612,3 +1612,37 @@ body.sidebar-collapsed .content {
     margin: 16px auto 12px;
   }
 }
+
+/* Chat unlock state */
+.nav-item:disabled,
+.new-chat:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+.nav-item:disabled:hover {
+  color: var(--muted);
+  background: transparent;
+}
+.new-chat:disabled:hover {
+  background: transparent;
+}
+.chat-lock-note {
+  margin: 10px 10px 0;
+  color: var(--subtle);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.chat-lock-banner {
+  width: min(880px, 100%);
+  margin: 0 auto 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--panel-strong) 42%, transparent);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.chat-lock-banner strong {
+  color: var(--text);
+}

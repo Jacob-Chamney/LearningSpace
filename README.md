@@ -38,7 +38,7 @@ keeping a durable trail of what was learned. AI should be a tool, not a crutch.
 | [Workflow](#workflow) | [Test the installer](#test-the-installer) | [Memory vault](#memory-vault) |
 | [What gets created](#what-gets-created) | [Build a shareable template](#build-a-shareable-template) | [Checks](#checks) |
 | [Browser flashcards](#browser-flashcards) | [License](#license) | [Reproducibility](#reproducibility) |
-| [Local dashboard](#local-dashboard) |  | [Windows and WSL](#windows-and-wsl) |
+| [Local dashboard](#local-dashboard) | [How to get started](#how-to-get-started) | [Windows and WSL](#windows-and-wsl) |
 
 <p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
@@ -96,13 +96,29 @@ opencode
 /connect
 ```
 
-Add the course material to `input/`, then use these prompts:
+Add the course material to `input/` (see [How to get started](#how-to-get-started)),
+then use these prompts:
 
 ```text
 generate assignment guide
 generate study guide
 generate flashcards
 ```
+
+<p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
+
+## How to get started
+
+LearningSpace needs source material before chat or generation commands can help.
+Add at least one of:
+
+- the assignment instructions in `input/assignmentGoal.txt`
+- lecture slides, lecture notes, handouts, readings, or other course documents
+  in `input/`
+
+You can add either through the **Workspace** tab or by copying files directly
+into `input/`. Chat stays locked until at least one of these is present. Once
+the material is loaded, use the prompts above.
 
 <p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
@@ -167,11 +183,15 @@ It opens `http://127.0.0.1:8765/web/` and provides:
 - assignment and study guide reading
 - inline answer reveals on study-guide questions
 - the interactive flashcard deck
-- a read-only Plan agent chat for questions and help
+- a course-scoped Plan agent chat that unlocks after content is added
 
 <p align="center">
   <img src="assets/dashboard-chat-orng.png" alt="LearningSpace dashboard in the Orng theme showing a new chat with the sidebar open" width="100%">
 </p>
+
+Chat is locked until an assignment instruction or at least one course document
+is loaded. Once unlocked, it stays within the current course material, declines
+off-topic requests, and reminds you to get back on track.
 
 ### Settings and themes
 

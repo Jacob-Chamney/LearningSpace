@@ -59,18 +59,20 @@
         </span>
       </a>
 
-      <button class="new-chat" type="button" id="new-chat-top">
+      <button class="new-chat" type="button" id="new-chat-top" disabled title="Add an assignment instruction or course material first.">
         <span class="plus-mark" aria-hidden="true">+</span>
         New chat
       </button>
 
       <nav class="nav" aria-label="Workspace sections">
-        <button type="button" data-view="chat" class="nav-item is-active">Chat</button>
+        <button type="button" data-view="chat" class="nav-item is-active" disabled title="Add an assignment instruction or course material first.">Chat</button>
         <button type="button" data-view="workspace" class="nav-item">Workspace</button>
         <button type="button" data-view="assignment" class="nav-item">Assignment guide</button>
         <button type="button" data-view="study" class="nav-item">Study guide</button>
         <button type="button" data-view="flashcards" class="nav-item">Flashcards</button>
       </nav>
+
+      <p class="chat-lock-note" id="chat-lock-note" hidden>Add an assignment instruction or course material to unlock chat.</p>
 
       <section class="history-block" aria-labelledby="history-title">
         <div class="history-head">

@@ -3,6 +3,7 @@ const state = {
   input: null,
   view: "chat",
   theme: "learningspace",
+  canChat: false,
   chats: [],
   activeChat: null,
   chatBusy: false,
@@ -291,10 +292,31 @@ function closeSettings() {
   $("#settings")?.focus();
 }
 
+function applyChatAvailability() {
+  const available = Boolean(state.status?.canChat);
+  state.canChat = available;
+  const controls = [$('.nav-item[data-view="chat"]'), $("#new-chat-top")];
+  controls.forEach((control) => {
+    if (!control) return;
+    control.disabled = !available;
+    control.setAttribute("aria-disabled", String(!available));
+    control.title = available ? "" : "Add an assignment instruction or course material first.";
+  });
+  const note = $("#chat-lock-note");
+  if (note) note.hidden = available;
+  if (!available && state.view === "chat") {
+    state.view = "workspace";
+    if (window.location.hash === "#chat") {
+      try { history.replaceState(null, "", "#workspace"); } catch { /* ignore */ }
+    }
+  }
+}
+
 async function loadStatus() {
   const response = await fetch(`/api/status?t=${Date.now()}`, { cache: "no-store" });
   if (!response.ok) throw new Error(`Status request failed (${response.status})`);
   state.status = await response.json();
+  applyChatAvailability();
 }
 
 async function loadInput() {
@@ -435,7 +457,7 @@ function removeChat(id) {
   state.chats = state.chats.filter((item) => item.id !== id);
   if (state.activeChat?.id === id) {
     state.activeChat = state.chats[0] || makeChat();
-    state.view = "chat";
+    state.view = state.canChat ? "chat" : "workspace";
   }
   saveChats();
   render();
@@ -451,7 +473,7 @@ function clearChatHistory() {
   if (!window.confirm("Delete all chat history? This only clears the dashboard history.")) return;
   state.chats = [];
   state.activeChat = makeChat();
-  state.view = "chat";
+  state.view = state.canChat ? "chat" : "workspace";
   try {
     localStorage.removeItem(LEGACY_CHAT_KEY);
     localStorage.removeItem(LEGACY_SESSION_KEY);
@@ -462,6 +484,10 @@ function clearChatHistory() {
 }
 
 function activateChat(id) {
+  if (!state.canChat) {
+    showToast("Add an assignment instruction or course material to unlock chat.");
+    return;
+  }
   if (state.chatBusy) {
     showToast("Wait for the current response first.");
     return;
@@ -477,6 +503,10 @@ function activateChat(id) {
 }
 
 function startNewChat() {
+  if (!state.canChat) {
+    showToast("Add an assignment instruction or course material to unlock chat.");
+    return;
+  }
   if (state.chatBusy) {
     showToast("Wait for the current response first.");
     return;
@@ -504,6 +534,13 @@ function viewHeader(label) {
 }
 
 function renderChatView() {
+  if (!state.canChat) {
+    state.view = "workspace";
+    document.body.dataset.view = "workspace";
+    setActiveNav();
+    renderWorkspace();
+    return;
+  }
   if (!state.activeChat) state.activeChat = makeChat();
   $("#content").innerHTML = `
     <section class="view-frame">
@@ -514,7 +551,7 @@ function renderChatView() {
           <textarea id="chat-input" rows="1" placeholder="Ask about the assignment, a source, a concept, or what to study next..."></textarea>
           <button class="button primary chat-send" type="submit" id="chat-send">Send</button>
         </form>
-        <p class="chat-hint">Enter sends · Shift+Enter adds a line · The Plan agent does not edit files.</p>
+        <p class="chat-hint">Course material only. Off-topic questions are declined. Enter sends · Shift+Enter adds a line.</p>
       </section>
     </section>
   `;
@@ -547,7 +584,7 @@ function renderChatMessages() {
       <div class="chat-welcome">
         <p class="eyebrow">LearningSpace</p>
         <h2>How can I help with your coursework?</h2>
-        <p>Ask about the assignment, a source document, a concept, or what to review next.</p>
+        <p>Ask about the assignment, a source document, a concept, or what to review next. Off-topic questions are declined.</p>
         <div class="chat-suggestions">
           <button type="button" data-suggestion="Summarize the assignment plan.">Summarize the assignment plan</button>
           <button type="button" data-suggestion="Quiz me on the study guide.">Quiz me on the study guide</button>
@@ -568,6 +605,10 @@ function renderChatMessages() {
 }
 
 async function sendChat() {
+  if (!state.canChat) {
+    showToast("Add an assignment instruction or course material to unlock chat.");
+    return;
+  }
   if (state.chatBusy) return;
   const input = $("#chat-input");
   const message = input.value.trim();
@@ -614,8 +655,8 @@ async function sendChat() {
     if (state.activeChat?.id === chat.id) renderChatMessages();
   } finally {
     state.chatBusy = false;
-    if (sendButton) sendButton.disabled = false;
-    if (newChatButton) newChatButton.disabled = false;
+    if (sendButton) sendButton.disabled = !state.canChat;
+    if (newChatButton) newChatButton.disabled = !state.canChat;
     $("#chat-input")?.focus();
   }
 }
@@ -640,6 +681,12 @@ function renderWorkspace() {
 
   $("#content").innerHTML = `
     ${viewHeader("WORKSPACE")}
+    ${!state.canChat ? `
+      <div class="chat-lock-banner" role="status">
+        <strong>Chat is locked.</strong>
+        Add an assignment instruction or at least one course document below to unlock it.
+      </div>
+    ` : ""}
     <div class="workspace-grid">
       <article class="card">
         <p class="card-kicker">Assignment input</p>
@@ -711,6 +758,8 @@ async function saveGoal() {
     const result = await response.json();
     if (!result.ok) throw new Error(result.error || "Save failed");
     await loadInput();
+    await loadStatus();
+    renderWorkspace();
     $("#goal-status").textContent = "Saved locally";
     showToast("Assignment instructions saved.");
   } catch (error) {
@@ -739,6 +788,7 @@ async function uploadFiles(fileList) {
     }
   }
   await loadInput();
+  await loadStatus();
   renderWorkspace();
   if (draft !== undefined && $("#goal-editor")) $("#goal-editor").value = draft;
   showToast(files.length === 1 ? "Source file added." : "Source files added.");
@@ -751,6 +801,7 @@ async function removeFile(name) {
     const result = await response.json();
     if (!result.ok) throw new Error(result.error || "Remove failed");
     await loadInput();
+    await loadStatus();
     renderWorkspace();
     showToast("Source file removed.");
   } catch (error) {
@@ -946,6 +997,10 @@ function toggleSidebar() {
 
 async function setView(view) {
   if (!views[view]) return;
+  if (view === "chat" && !state.canChat) {
+    showToast("Add an assignment instruction or course material to unlock chat.");
+    return;
+  }
   state.view = view;
   window.location.hash = view;
   if (view === "workspace" && !state.input) {
@@ -984,6 +1039,14 @@ function bindEvents() {
   window.addEventListener("hashchange", () => {
     let view = window.location.hash.slice(1);
     if (view === "overview") view = "workspace";
+    if (view === "chat" && !state.canChat) {
+      state.view = "workspace";
+      if (window.location.hash !== "#workspace") {
+        try { history.replaceState(null, "", "#workspace"); } catch { /* ignore */ }
+      }
+      render();
+      return;
+    }
     if (views[view] && view !== state.view) {
       state.view = view;
       if (view === "workspace" && !state.input) loadInput().then(render).catch(() => render());
@@ -1014,6 +1077,7 @@ async function init() {
     const tasks = [loadStatus()];
     if (state.view === "workspace") tasks.push(loadInput());
     await Promise.all(tasks);
+    if (state.view === "workspace" && !state.input) await loadInput();
     render();
   } catch (error) {
     showError(`Dashboard could not reach the local server. Run scripts/serve-dashboard.py and open its URL. ${error.message}`);
