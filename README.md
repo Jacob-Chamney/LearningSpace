@@ -118,7 +118,8 @@ Add at least one of:
 
 You can add either through the **Workspace** tab or by copying files directly
 into `input/`. Chat stays locked until at least one of these is present. Once
-the material is loaded, use the prompts above.
+the material is loaded, use the prompts above or choose **Generate selected** in
+**Workspace**.
 
 <p align="center"><img src="assets/divider-orng.svg" alt="" width="100%"></p>
 
@@ -183,6 +184,7 @@ It opens `http://127.0.0.1:8765/web/` and provides:
 - assignment and study guide reading
 - inline answer reveals on study-guide questions
 - the interactive flashcard deck
+- selective generation of the assignment guide, study guide, and flashcards
 - a course-scoped Plan agent chat that unlocks after content is added
 
 <p align="center">
@@ -192,6 +194,22 @@ It opens `http://127.0.0.1:8765/web/` and provides:
 Chat is locked until an assignment instruction or at least one course document
 is loaded. Once unlocked, it stays within the current course material, declines
 off-topic requests, and reminds you to get back on track.
+
+### Generate from Workspace
+
+Open **Workspace**, choose **Assignment guide**, **Study guide + answer key**,
+and/or **Flashcards**, then select **Generate selected**. The dashboard runs the
+write-capable Build agent against the current sources and agent instructions.
+It asks before replacing existing outputs, and it rebuilds the browser deck when
+flashcards are selected.
+
+The chat remains read-only. Generation is a separate explicit action.
+
+Generation uses the same model as chat by default. Override it with:
+
+```bash
+OPENCODE_WEB_GENERATE_MODEL=provider/model ./scripts/serve-dashboard.py
+```
 
 ### Settings and themes
 

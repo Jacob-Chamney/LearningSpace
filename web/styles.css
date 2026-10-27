@@ -1646,3 +1646,54 @@ body.sidebar-collapsed .content {
 .chat-lock-banner strong {
   color: var(--text);
 }
+
+/* Selective output generation */
+.generate-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+.generate-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--panel-strong) 35%, transparent);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.generate-option:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.generate-option input {
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+  accent-color: var(--indigo);
+}
+.generate-option span {
+  display: grid;
+  gap: 2px;
+}
+.generate-option strong {
+  font-weight: 600;
+}
+.generate-option small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.generate-note {
+  margin: 12px 0 0;
+  color: var(--subtle);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .generate-options { grid-template-columns: 1fr; }
+}

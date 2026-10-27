@@ -4,6 +4,7 @@ const state = {
   view: "chat",
   theme: "learningspace",
   canChat: false,
+  generating: false,
   chats: [],
   activeChat: null,
   chatBusy: false,
@@ -711,6 +712,31 @@ function renderWorkspace() {
         </div>
         <div class="file-list" id="source-list">${fileRows}</div>
       </article>
+
+      <article class="card generate-card">
+        <p class="card-kicker">Generate</p>
+        <h2>Study outputs</h2>
+        <p>Build selected outputs from the current source material. This uses the write-capable Build agent.</p>
+        <div class="generate-options">
+          <label class="generate-option">
+            <input class="generate-target" type="checkbox" value="assignment" checked ${state.canChat && !state.generating ? "" : "disabled"}>
+            <span><strong>Assignment guide</strong><small>Instructions and course documents</small></span>
+          </label>
+          <label class="generate-option">
+            <input class="generate-target" type="checkbox" value="study" checked ${state.canChat && !state.generating ? "" : "disabled"}>
+            <span><strong>Study guide + answer key</strong><small>Course documents in input/</small></span>
+          </label>
+          <label class="generate-option">
+            <input class="generate-target" type="checkbox" value="flashcards" checked ${state.canChat && !state.generating ? "" : "disabled"}>
+            <span><strong>Flashcards</strong><small>Built from the study guide</small></span>
+          </label>
+        </div>
+        <div class="card-actions">
+          <button class="button primary" type="button" id="generate-outputs" ${state.canChat && !state.generating ? "" : "disabled"}>Generate selected</button>
+          <span class="inline-hint" id="generate-status">${state.canChat ? "Generation can take a few minutes." : "Add content to unlock generation."}</span>
+        </div>
+        <p class="generate-note">Selected existing outputs are replaced after confirmation. Flashcards require a study guide; one is added automatically when needed.</p>
+      </article>
     </div>
   `;
 
@@ -742,6 +768,11 @@ function renderWorkspace() {
   $$(".remove-file").forEach((button) => {
     button.addEventListener("click", () => removeFile(button.dataset.name));
   });
+  $("#generate-outputs").addEventListener("click", generateSelected);
+  $$(".generate-target").forEach((input) => {
+    input.addEventListener("change", ensureGenerateDependencies);
+  });
+  ensureGenerateDependencies();
 }
 
 async function saveGoal() {
@@ -792,6 +823,79 @@ async function uploadFiles(fileList) {
   renderWorkspace();
   if (draft !== undefined && $("#goal-editor")) $("#goal-editor").value = draft;
   showToast(files.length === 1 ? "Source file added." : "Source files added.");
+}
+
+const GENERATE_TARGET_OUTPUTS = {
+  assignment: ["AssignmentGuide/assignment-guide.md"],
+  study: ["StudyGuide/study-guide.md", "StudyGuide/study-guide-answers.md"],
+  flashcards: ["Flashcards/flashcards.md", "Flashcards/flashcards.html"],
+};
+
+function selectedGenerateTargets() {
+  return $$(".generate-target:checked").map((input) => input.value);
+}
+
+function ensureGenerateDependencies() {
+  const flashcards = $('.generate-target[value="flashcards"]');
+  const study = $('.generate-target[value="study"]');
+  if (!flashcards?.checked || !study || study.checked) return;
+  const studyReady =
+    outputInfo("StudyGuide/study-guide.md")?.exists &&
+    outputInfo("StudyGuide/study-guide-answers.md")?.exists;
+  if (studyReady) return;
+  study.checked = true;
+  showToast("Study guide added because flashcards depend on it.");
+}
+
+async function generateSelected() {
+  if (!state.canChat) {
+    showToast("Add an assignment instruction or course material first.");
+    return;
+  }
+  if (state.generating) return;
+  ensureGenerateDependencies();
+  const targets = selectedGenerateTargets();
+  if (!targets.length) {
+    showToast("Select at least one output to generate.");
+    return;
+  }
+
+  const outputs = [...new Set(targets.flatMap((target) => GENERATE_TARGET_OUTPUTS[target] || []))];
+  const existing = outputs.filter((relative) => outputInfo(relative)?.exists);
+  if (existing.length && !window.confirm(
+    `Replace ${existing.length} existing output file${existing.length === 1 ? "" : "s"}?`,
+  )) {
+    return;
+  }
+
+  const button = $("#generate-outputs");
+  const status = $("#generate-status");
+  state.generating = true;
+  if (button) button.disabled = true;
+  $$(".generate-target").forEach((input) => { input.disabled = true; });
+  if (status) status.textContent = "Generating selected outputs. This can take a few minutes.";
+
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ targets }),
+    });
+    const result = await response.json();
+    if (!result.ok) throw new Error(result.error || "Generation failed");
+    await loadStatus();
+    state.flashcardsVersion = Date.now();
+    render();
+    showToast("Selected study outputs generated.");
+  } catch (error) {
+    if (status) status.textContent = error.message;
+    showToast(error.message);
+  } finally {
+    state.generating = false;
+    const currentButton = $("#generate-outputs");
+    if (currentButton) currentButton.disabled = !state.canChat;
+    $$(".generate-target").forEach((input) => { input.disabled = !state.canChat; });
+  }
 }
 
 async function removeFile(name) {
