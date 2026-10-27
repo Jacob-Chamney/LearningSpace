@@ -143,7 +143,12 @@ the included OpenCode themes. The choice is stored in the browser.
 
 The helper chat uses the read-only Plan agent with `deepseek/deepseek-v4-pro` by
 default. Override it with `OPENCODE_WEB_MODEL=provider/model` when starting the
-dashboard.
+dashboard. Chat messages are sent to that model provider, and the Plan agent
+may inspect files in the workspace to answer.
+
+For a more conservative install, use `--no-opencode`, `--no-glow`, and
+`--skip-deps`. Those flags avoid the official OpenCode `curl | bash` installer
+and optional system package installs.
 
 ## A memory vault that fits any subject
 

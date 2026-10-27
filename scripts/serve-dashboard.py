@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import posixpath
 import re
 import subprocess
 import threading
@@ -76,13 +77,75 @@ def input_payload() -> dict:
     }
 
 
+STATIC_FILES = {
+    "/AssignmentGuide/assignment-guide.md",
+    "/StudyGuide/study-guide.md",
+    "/StudyGuide/study-guide-answers.md",
+    "/Flashcards/flashcards.html",
+    "/assets/banner.png",
+    "/assets/banner.svg",
+}
+
+
+def normalized_path(raw_path: str) -> str:
+    raw = unquote(urlparse(raw_path).path)
+    trailing = raw.endswith("/") and raw != "/"
+    path = posixpath.normpath(raw)
+    if not path.startswith("/"):
+        path = "/" + path
+    if trailing and path != "/":
+        path += "/"
+    return path
+
+
+def allowed_static(path: str) -> bool:
+    return path.startswith("/web/") or path in STATIC_FILES
+
+
 class DashboardHandler(SimpleHTTPRequestHandler):
+    server_version = "LearningSpace"
+    sys_version = ""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
+    def is_local_request(self) -> bool:
+        host = self.headers.get("Host", "").split(":")[0].strip().lower()
+        if host not in {"127.0.0.1", "localhost"}:
+            return False
+
+        origin = self.headers.get("Origin")
+        if origin:
+            port = self.server.server_address[1]
+            allowed = {
+                f"http://127.0.0.1:{port}",
+                f"http://localhost:{port}",
+            }
+            if origin not in allowed:
+                return False
+
+        fetch_site = self.headers.get("Sec-Fetch-Site")
+        if fetch_site and fetch_site not in {"same-origin", "none"}:
+            return False
+
+        return True
+
+    def reject_if_not_local(self) -> bool:
+        if self.is_local_request():
+            return False
+        self.send_json({"ok": False, "error": "Local same-origin request required."}, status=403)
+        return True
+
     def do_GET(self) -> None:
-        path = urlparse(self.path).path
+        if self.reject_if_not_local():
+            return
+        path = normalized_path(self.path)
         if path == "/":
+            self.send_response(302)
+            self.send_header("Location", "/web/")
+            self.end_headers()
+            return
+        if path == "/web":
             self.send_response(302)
             self.send_header("Location", "/web/")
             self.end_headers()
@@ -93,12 +156,15 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         if path == "/api/input":
             self.send_json(input_payload())
             return
-        if path.startswith("/.git") or path.startswith("/Memory/.obsidian"):
+        if not allowed_static(path):
             self.send_error(404)
             return
+        self.path = path
         super().do_GET()
 
     def do_POST(self) -> None:
+        if self.reject_if_not_local():
+            return
         parsed = urlparse(self.path)
         if parsed.path == "/api/input/goal":
             self.save_goal()
@@ -112,11 +178,27 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         self.send_error(404)
 
     def do_DELETE(self) -> None:
+        if self.reject_if_not_local():
+            return
         parsed = urlparse(self.path)
         if parsed.path == "/api/input":
             self.delete_input(parsed)
             return
         self.send_error(404)
+
+    def end_headers(self) -> None:
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'self'; img-src 'self' data:; "
+            "style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; "
+            "frame-src 'self'; connect-src 'self'; base-uri 'none'; "
+            "form-action 'self'",
+        )
+        super().end_headers()
 
     def send_json(self, payload: dict, status: int = 200) -> None:
         body = json.dumps(payload).encode("utf-8")
