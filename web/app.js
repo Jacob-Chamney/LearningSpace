@@ -6,6 +6,7 @@ const state = {
   chats: [],
   activeChat: null,
   chatBusy: false,
+  menuChatId: null,
   sidebarCollapsed: false,
   toastTimer: null,
   flashcardsVersion: Date.now(),
@@ -353,6 +354,8 @@ function loadChats() {
           updatedAt: Date.now(),
         };
         chats = [chat];
+        localStorage.removeItem(LEGACY_CHAT_KEY);
+        localStorage.removeItem(LEGACY_SESSION_KEY);
       }
     } catch { /* ignore */ }
   }
@@ -367,6 +370,10 @@ function saveChats() {
   try {
     localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(state.chats.slice(-30)));
     localStorage.setItem(ACTIVE_CHAT_KEY, state.activeChat?.id || "");
+    if (!state.chats.length) {
+      localStorage.removeItem(LEGACY_CHAT_KEY);
+      localStorage.removeItem(LEGACY_SESSION_KEY);
+    }
   } catch { /* ignore */ }
 }
 
@@ -385,9 +392,11 @@ function renderSidebarHistory() {
       <button class="history-item ${state.activeChat?.id === chat.id ? "is-active" : ""}" type="button" data-chat-id="${escapeHtml(chat.id)}">
         ${escapeHtml(chat.title)}
       </button>
-      <button class="history-delete" type="button" data-delete-chat="${escapeHtml(chat.id)}" aria-label="Delete ${escapeHtml(chat.title)}" title="Delete conversation">
+      <button class="history-menu-button" type="button" data-menu-chat="${escapeHtml(chat.id)}" aria-label="More options for ${escapeHtml(chat.title)}" aria-haspopup="menu" aria-expanded="false" title="More options">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18"></path>
+          <circle cx="5" cy="12" r="1.5"></circle>
+          <circle cx="12" cy="12" r="1.5"></circle>
+          <circle cx="19" cy="12" r="1.5"></circle>
         </svg>
       </button>
     </div>
@@ -395,9 +404,39 @@ function renderSidebarHistory() {
   $$(".history-item", container).forEach((button) => {
     button.addEventListener("click", () => activateChat(button.dataset.chatId));
   });
-  $$(".history-delete", container).forEach((button) => {
-    button.addEventListener("click", () => removeChat(button.dataset.deleteChat));
+  $$(".history-menu-button", container).forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openChatMenu(button.dataset.menuChat, button);
+    });
   });
+}
+
+function openChatMenu(id, button) {
+  const menu = $("#chat-menu");
+  if (!menu) return;
+  state.menuChatId = id;
+  menu.hidden = false;
+  const rect = button.getBoundingClientRect();
+  const width = 132;
+  const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width));
+  const top = Math.min(window.innerHeight - 48, rect.bottom + 4);
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+  $$(".history-menu-button").forEach((item) => item.setAttribute("aria-expanded", String(item === button)));
+}
+
+function closeChatMenu() {
+  const menu = $("#chat-menu");
+  if (menu) menu.hidden = true;
+  state.menuChatId = null;
+  $$(".history-menu-button").forEach((button) => button.setAttribute("aria-expanded", "false"));
+}
+
+function deleteMenuChat() {
+  const id = state.menuChatId;
+  closeChatMenu();
+  if (id) removeChat(id);
 }
 
 function removeChat(id) {
@@ -428,6 +467,10 @@ function clearChatHistory() {
   state.chats = [];
   state.activeChat = makeChat();
   state.view = "chat";
+  try {
+    localStorage.removeItem(LEGACY_CHAT_KEY);
+    localStorage.removeItem(LEGACY_SESSION_KEY);
+  } catch { /* ignore */ }
   saveChats();
   render();
   showToast("Chat history cleared.");
@@ -442,6 +485,7 @@ function activateChat(id) {
   if (!chat) return;
   state.activeChat = chat;
   state.view = "chat";
+  closeChatMenu();
   collapseSidebarOnMobile();
   saveChats();
   render();
@@ -454,6 +498,7 @@ function startNewChat() {
   }
   state.activeChat = makeChat();
   state.view = "chat";
+  closeChatMenu();
   collapseSidebarOnMobile();
   saveChats();
   render();
@@ -957,6 +1002,13 @@ function bindEvents() {
   });
   $("#new-chat-top").addEventListener("click", startNewChat);
   $("#clear-history").addEventListener("click", clearChatHistory);
+  $("#chat-menu-delete").addEventListener("click", deleteMenuChat);
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".history-menu-button") || event.target.closest("#chat-menu")) return;
+    closeChatMenu();
+  });
+  window.addEventListener("scroll", closeChatMenu, true);
+  window.addEventListener("resize", closeChatMenu);
   $("#sidebar-toggle").addEventListener("click", toggleSidebar);
   $("#sidebar-close").addEventListener("click", () => {
     state.sidebarCollapsed = true;

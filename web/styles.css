@@ -1429,7 +1429,10 @@ h1 {
 .chat-history {
   min-height: 0;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.chat-history::-webkit-scrollbar { display: none; }
 
 .history-row {
   display: flex;
@@ -1442,7 +1445,7 @@ h1 {
   min-width: 0;
 }
 
-.history-delete {
+.history-menu-button {
   display: grid;
   flex: 0 0 26px;
   width: 26px;
@@ -1454,23 +1457,48 @@ h1 {
   color: var(--subtle);
   background: transparent;
   cursor: pointer;
-  opacity: 0;
+  opacity: 0.55;
 }
-.history-row:hover .history-delete,
-.history-delete:focus-visible {
+.history-menu-button:hover,
+.history-menu-button:focus-visible {
+  color: var(--text);
   opacity: 1;
 }
-.history-delete:hover {
+.history-menu-button[aria-expanded="true"] {
+  color: var(--text);
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+  opacity: 1;
+}
+.history-menu-button svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.chat-menu {
+  position: fixed;
+  z-index: 70;
+  min-width: 132px;
+  padding: 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--panel-strong);
+}
+.chat-menu[hidden] { display: none; }
+.chat-menu button {
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+}
+.chat-menu button:hover {
   color: var(--danger);
   background: color-mix(in srgb, var(--danger) 10%, transparent);
-}
-.history-delete svg {
-  width: 13px;
-  height: 13px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
 }
 
 .sidebar-bottom {
@@ -1498,5 +1526,5 @@ h1 {
 }
 
 @media (max-width: 900px) {
-  .history-delete { opacity: 1; }
+  .history-menu-button { opacity: 1; }
 }
