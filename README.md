@@ -169,11 +169,19 @@ It opens `http://127.0.0.1:8765/web/` and provides:
 - the interactive flashcard deck
 - a read-only Plan agent chat for questions and help
 
+<p align="center">
+  <img src="assets/dashboard-chat.png" alt="LearningSpace dashboard showing a new chat with the sidebar open" width="100%">
+</p>
+
 ### Settings and themes
 
 Use **Settings > Appearance** to choose from the OpenCode theme set. The
 default is the custom LearningSpace palette. The landing art uses the OpenCode
 `orng` palette.
+
+<p align="center">
+  <img src="assets/dashboard-themes.png" alt="LearningSpace appearance settings showing the built-in theme choices" width="70%">
+</p>
 
 The helper chat uses the read-only Plan agent with `deepseek/deepseek-v4-pro`
 by default. Override it with:
