@@ -8,9 +8,10 @@ by folder.
 - `input/` - one source set: `assignmentGoal.txt` plus course documents.
 - `AssignmentGuide/` - generated assignment guide and tutor instructions.
 - `StudyGuide/` - generated study guide and answer key.
-- `Flashcards/` - generated flashcards from the study guide.
+- `Flashcards/` - generated Markdown and browser flashcards from the study guide.
 - `Memory/` - learning memory vault. Follow `Memory/AGENTS.md`.
-- `scripts/` - guide, freshness, coverage, and release checks.
+- `scripts/` - guide, freshness, coverage, release, and dashboard tooling.
+- `web/` - local browser dashboard for viewing and managing outputs.
 - `template/` - sanitized memory-vault skeleton for releases.
 - `.githooks/` - Git pre-commit hook.
 - `install.sh` - interactive installer for end users.

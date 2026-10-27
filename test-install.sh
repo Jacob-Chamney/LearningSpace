@@ -57,6 +57,7 @@ say "Running installer in an isolated workspace..."
   --no-opencode \
   --no-glow \
   --skip-deps \
+  --no-command \
   --yes
 
 say "Verifying copied workspace..."

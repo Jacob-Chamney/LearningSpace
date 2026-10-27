@@ -6,3 +6,7 @@ Memory/.obsidian/workspace-mobile.json
 
 # Generated release/template output
 dist/
+
+# Python cache
+__pycache__/
+*.pyc

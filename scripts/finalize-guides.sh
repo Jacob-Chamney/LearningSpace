@@ -8,7 +8,8 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   cat <<'EOF'
 Usage: scripts/finalize-guides.sh
 
-Refresh the checksum manifest and run all output checks.
+Build the browser flashcards, refresh the checksum manifest, and run all output
+checks.
 
 Run this after generating or intentionally editing a guide or flashcard deck.
 The script refuses to bless a source change when no generated output changed,
@@ -39,6 +40,7 @@ output_paths = [
     "StudyGuide/study-guide.md",
     "StudyGuide/study-guide-answers.md",
     "Flashcards/flashcards.md",
+    "Flashcards/flashcards.html",
 ]
 
 
@@ -117,6 +119,7 @@ PY
 
 scripts/check-guides.sh
 scripts/check-coverage.sh
+scripts/build-flashcards-html.sh
 scripts/update-manifest.sh
 scripts/check-stale.sh
 

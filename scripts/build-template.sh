@@ -47,6 +47,7 @@ say "Building sanitized template in $TARGET..."
     --exclude='./StudyGuide/study-guide.md' \
     --exclude='./StudyGuide/study-guide-answers.md' \
     --exclude='./Flashcards/flashcards.md' \
+    --exclude='./Flashcards/flashcards.html' \
     --exclude='./.guide-manifest.json' \
     -cf - .
 ) | (

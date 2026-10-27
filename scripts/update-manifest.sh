@@ -27,6 +27,7 @@ output_specs = [
             "StudyGuide/study-guide-answers.md",
         ],
     ),
+    ("Flashcards/flashcards.html", ["Flashcards/flashcards.md"]),
 ]
 
 

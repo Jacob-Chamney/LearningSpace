@@ -11,6 +11,7 @@ INSTALL_GLOW="ask"
 SKIP_HOOKS=false
 SKIP_CHECKS=false
 SKIP_DEPS=false
+SKIP_COMMAND=false
 
 say() {
   printf '%s\n' "$*"
@@ -40,6 +41,7 @@ Options:
   --skip-deps       Do not install missing system tools
   --skip-hooks      Do not initialize Git or install the pre-commit hook
   --skip-checks     Do not run the guide and stale checks after setup
+  --no-command      Do not install the Learn launcher
   -h, --help        Show this help
 
 The installer copies this workspace into the target directory when the target
@@ -77,6 +79,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --skip-deps)
       SKIP_DEPS=true
+      shift
+      ;;
+    --no-command)
+      SKIP_COMMAND=true
       shift
       ;;
     -h|--help)
@@ -390,6 +396,75 @@ install_plugins() {
   say "No external plugins or MCP servers are required."
 }
 
+
+install_dashboard_command() {
+  [ "$SKIP_COMMAND" = true ] && return 0
+
+  if ! ask_yes_no "Install the Learn launcher for the dashboard? [Y/n]" yes; then
+    return 0
+  fi
+
+  local bin_dir="$HOME/.local/bin"
+  local command_path="$bin_dir/Learn"
+  local target_script="$TARGET/scripts/serve-dashboard.py"
+
+  mkdir -p "$bin_dir"
+
+  if [ -e "$command_path" ] || [ -L "$command_path" ]; then
+    if [ -L "$command_path" ] && [ "$(readlink "$command_path")" = "$target_script" ]; then
+      :
+    elif ! ask_yes_no "Overwrite existing $command_path? [y/N]" no; then
+      warn "Keeping existing $command_path."
+      return 0
+    fi
+  fi
+
+  ln -sfn "$target_script" "$command_path"
+  say "Installed dashboard command: $command_path"
+
+  case ":$PATH:" in
+    *":$bin_dir:"*)
+      say "  - $bin_dir is already on PATH"
+      ;;
+    *)
+      local shell_name
+      local config_file
+      local path_line
+      shell_name="$(basename "${SHELL:-sh}")"
+      case "$shell_name" in
+        zsh)
+          config_file="${ZDOTDIR:-$HOME}/.zshrc"
+          path_line='export PATH="$HOME/.local/bin:$PATH"'
+          ;;
+        bash)
+          config_file="$HOME/.bashrc"
+          path_line='export PATH="$HOME/.local/bin:$PATH"'
+          ;;
+        fish)
+          config_file="${XDG_CONFIG_HOME:-$HOME/.config}/fish/config.fish"
+          path_line='fish_add_path "$HOME/.local/bin"'
+          ;;
+        *)
+          config_file="$HOME/.profile"
+          path_line='export PATH="$HOME/.local/bin:$PATH"'
+          ;;
+      esac
+
+      if [ -f "$config_file" ] && grep -q '.local/bin' "$config_file"; then
+        say "  - $bin_dir is configured in $config_file"
+      elif ask_yes_no "Add $bin_dir to PATH in $config_file? [Y/n]" yes; then
+        mkdir -p "$(dirname "$config_file")"
+        printf '\n# LearningSpace dashboard\n%s\n' "$path_line" >> "$config_file"
+        say "  - Added $bin_dir to PATH in $config_file"
+      else
+        warn "Add $bin_dir to PATH, then run Learn."
+      fi
+      ;;
+  esac
+
+  say "Run: Learn"
+}
+
 run_checks() {
   [ "$SKIP_CHECKS" = true ] && return 0
 
@@ -415,6 +490,7 @@ install_glow_if_requested
 copy_workspace
 install_plugins
 configure_hooks
+install_dashboard_command
 run_checks
 
 cat <<EOF
@@ -435,6 +511,12 @@ Then add the current course files to input/ and run:
   "generate assignment guide"
   "generate study guide"
   "generate flashcards"
+
+Launch the local dashboard:
+  Learn
+
+If you skipped the launcher:
+  scripts/serve-dashboard.py
 
 Read README.md for the OpenCode and memory-vault setup details.
 EOF
