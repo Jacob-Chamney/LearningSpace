@@ -170,7 +170,7 @@ It opens `http://127.0.0.1:8765/web/` and provides:
 - a read-only Plan agent chat for questions and help
 
 <p align="center">
-  <img src="assets/dashboard-chat.png" alt="LearningSpace dashboard showing a new chat with the sidebar open" width="100%">
+  <img src="assets/dashboard-chat-orng.png" alt="LearningSpace dashboard in the Orng theme showing a new chat with the sidebar open" width="100%">
 </p>
 
 ### Settings and themes
@@ -180,7 +180,7 @@ default is the custom LearningSpace palette. The landing art uses the OpenCode
 `orng` palette.
 
 <p align="center">
-  <img src="assets/dashboard-themes.png" alt="LearningSpace appearance settings showing the built-in theme choices" width="70%">
+  <img src="assets/dashboard-themes-orng.png" alt="LearningSpace appearance settings in the Orng theme showing the built-in theme choices" width="70%">
 </p>
 
 The helper chat uses the read-only Plan agent with `deepseek/deepseek-v4-pro`
