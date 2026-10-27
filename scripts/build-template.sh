@@ -60,8 +60,6 @@ cp "$ROOT/input/AGENTS.md" "$TARGET/input/AGENTS.md"
 mkdir -p "$TARGET/Memory"
 cp -R "$ROOT/template/Memory/." "$TARGET/Memory/"
 
-mkdir -p "$TARGET/Memory/06 Templates"
-cp -R "$ROOT/Memory/06 Templates/." "$TARGET/Memory/06 Templates/"
 
 # Replace the configured author name, if the scaffold contains it.
 python3 - "$TARGET" "$AUTHOR_NAME" <<'PY'

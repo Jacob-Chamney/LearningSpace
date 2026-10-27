@@ -1,20 +1,22 @@
 ---
 type: session
 status: complete
-languages: []
 tags: [session]
-created: "{{date:YYYY-MM-DD}}"
-updated: "{{date:YYYY-MM-DD}}"
-date: "{{date:YYYY-MM-DD}}"
-project:
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+session:
 ---
 
-# {{date:YYYY-MM-DD}} - {{title}}
+# {{date}} - {{title}}
 
-## What happened
+## Summary
+
+- What was worked on and what changed.
 
 ## Decisions
 
+- Decisions, constraints, or approaches that matter later.
+
 ## Next
 
-## Links
+- Concrete next steps, or "- None."

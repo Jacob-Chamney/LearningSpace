@@ -8,7 +8,7 @@ tags: [moc, projects]
 
 ## Active
 
-- Add active project notes here.
+- Add active assignment or project notes here.
 
 ## Completed
 
@@ -17,4 +17,5 @@ tags: [moc, projects]
 ## Links
 
 - [[Home]]
+- [[Courses MOC]]
 - [[Sessions MOC]]

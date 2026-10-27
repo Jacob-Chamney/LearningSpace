@@ -23,7 +23,7 @@ if not sources:
     sys.exit(0)
 
 errors = []
-lectures = [
+course_sources = [
     path for path in sources if path.name != "assignmentGoal.txt"
 ]
 
@@ -31,7 +31,7 @@ if not study_guide.exists():
     errors.append("StudyGuide/study-guide.md is missing")
 else:
     text = study_guide.read_text(encoding="utf-8")
-    for path in lectures:
+    for path in course_sources:
         if path.name not in text:
             errors.append(
                 f"StudyGuide/study-guide.md does not mention {path.name}"
@@ -54,5 +54,5 @@ if errors:
 
 print("Source coverage check passed:")
 print(f"  - input sources: {len(sources)}")
-print(f"  - lecture sources: {len(lectures)}")
+print(f"  - course sources: {len(course_sources)}")
 PY

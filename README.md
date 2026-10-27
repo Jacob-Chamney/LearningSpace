@@ -11,7 +11,7 @@ input/  ->  StudyGuide/  ->  Flashcards/
 input/ + relevant memory  ->  AssignmentGuide/
 ```
 
-- Put `assignmentGoal.txt`, lecture decks, PDFs, and handouts in `input/`.
+- Put `assignmentGoal.txt`, course documents, PDFs, and handouts in `input/`.
 - Say **"generate assignment guide"** to build
   `AssignmentGuide/assignment-guide.md`.
 - Say **"generate study guide"** to build `StudyGuide/study-guide.md` and its
@@ -262,10 +262,14 @@ scripts/check-coverage.sh
 
 `scripts/check-coverage.sh` verifies that:
 
-- every lecture file in `input/` is represented in the study guide
+- every non-assignment source file in `input/` is represented in the study guide
 - `assignmentGoal.txt` is represented in the assignment guide
 
 ## Memory vault standard
+
+The default template is subject-neutral. It works for essays, problem sets,
+lab reports, presentations, and programming courses. Code-specific formatting
+only applies when the assignment actually includes code or formulas.
 
 The plugin expects `Memory/` to be the Obsidian vault root by default and uses:
 
@@ -273,11 +277,18 @@ The plugin expects `Memory/` to be the Obsidian vault root by default and uses:
 Memory/
   AGENTS.md
   Home.md
+  00 Inbox/
+  01 Topics/
+    Topics MOC.md
+  02 Courses/
+    Courses MOC.md
   03 Projects/
   04 Sessions/
     Sessions MOC.md
+  05 Review/
+    Review MOC.md
   06 Templates/
-    Session.md
+  07 Attachments/
 ```
 
 An end user can replace `Memory/` with their own Obsidian vault, but it must

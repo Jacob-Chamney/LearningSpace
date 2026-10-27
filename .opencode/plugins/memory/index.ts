@@ -19,7 +19,7 @@ const inFlight = new Set<string>()
 const lastCapture = new Map<string, number>()
 const lastUserCount = new Map<string, number>()
 
-const SUMMARY_PROMPT = `You are writing a session note for a coding memory vault.
+const SUMMARY_PROMPT = `You are writing a session note for a learning memory vault.
 
 Summarize the session above for future reference. Return Markdown only, with
 exactly these sections and no frontmatter:
@@ -37,8 +37,7 @@ exactly these sections and no frontmatter:
 - Concrete next steps, or "- None."
 
 Keep it under 180 words. Be factual. Mention files, commands, tests, or concepts
-only if they actually appeared in the session. Do not include code blocks or full
-source code.`
+only if they actually appeared in the session. Do not include full submissions, answer keys, or long excerpts.`
 
 type SessionPart = {
   type?: string

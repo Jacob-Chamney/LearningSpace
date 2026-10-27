@@ -1,13 +1,15 @@
 ---
 type: moc
-status: active
+status: seed
 tags: [moc]
-created: "{{date:YYYY-MM-DD}}"
-updated: "{{date:YYYY-MM-DD}}"
 ---
 
 # {{title}}
 
 ## Overview
 
-## Notes
+- Add a short orientation for this map of content.
+
+## Links
+
+- [[Home]]

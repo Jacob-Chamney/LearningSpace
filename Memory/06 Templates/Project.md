@@ -1,24 +1,26 @@
 ---
 type: project
 status: active
-languages: []
-tags: []
-created: "{{date:YYYY-MM-DD}}"
-updated: "{{date:YYYY-MM-DD}}"
-started: "{{date:YYYY-MM-DD}}"
-completed:
+tags: [project]
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
 ---
 
-# {{title}}
+# {{project}}
 
 ## Goal
 
+- State what the assignment or project must accomplish.
+
 ## Current state
+
+- Record progress, blockers, and the next step.
 
 ## Decisions
 
-## Deliverables
+- Record choices and constraints that matter later.
 
 ## Links
 
-## Next steps
+- [[Home]]
+- [[Projects MOC]]

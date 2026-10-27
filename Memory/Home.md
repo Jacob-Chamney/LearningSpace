@@ -1,36 +1,33 @@
-# Coding Memory
+# Learning Memory
 
 Shared memory for the user and the assistant.
-This vault stores reusable coding knowledge, project history, and session decisions.
+This vault stores durable course notes, topic knowledge, project history, and
+session decisions.
 
 ## Start here
 
 Open this folder as an Obsidian vault.
 
 - [[AGENTS|Memory rules]]
-- [[Algorithms MOC]]
+- [[Topics MOC]]
+- [[Courses MOC]]
 - [[Projects MOC]]
 - [[Sessions MOC]]
-- [[Debugging MOC]]
-- [[C++ MOC]]
-- [[Python MOC]]
-- [[PHP MOC]]
+- [[Review MOC]]
 - [[Inbox]]
 - [[Attachments]]
 
-## Languages
+## Areas
 
-- [[C++ MOC]]
-- [[Python MOC]]
-- [[PHP MOC]]
+- [[Topics MOC]]
+- [[Courses MOC]]
+- [[Projects MOC]]
+- [[Sessions MOC]]
+- [[Review MOC]]
 
 ## Active projects
 
 - Add project notes as work begins.
-
-## Completed projects
-
-- Add completed projects here.
 
 ## Recent sessions
 
@@ -39,11 +36,11 @@ Open this folder as an Obsidian vault.
 ## How to use this vault
 
 - Quick captures go in `00 Inbox/`.
-- Reusable algorithms go in `01 Algorithms/`.
-- Language-specific notes go under `02 Languages/`.
-- Project memory goes in `03 Projects/`.
+- Reusable topics and concepts go in `01 Topics/`.
+- Course dashboards go in `02 Courses/`.
+- Project and assignment memory goes in `03 Projects/`.
 - Dated work summaries go in `04 Sessions/`.
-- Reusable bug patterns go in `05 Debugging/`.
+- Review notes, mistakes, and retrieval questions go in `05 Review/`.
 - New notes start from `06 Templates/`.
 - Images and small files go in `07 Attachments/`.
 - Session notes are auto-captured after successful sessions; review them.

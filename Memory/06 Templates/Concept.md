@@ -1,18 +1,21 @@
 ---
 type: concept
 status: seed
-languages: []
-tags: []
-created: "{{date:YYYY-MM-DD}}"
-updated: "{{date:YYYY-MM-DD}}"
+tags: [concept]
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
 ---
 
-# {{title}}
+# {{concept}}
 
-## What it is
+## Definition
+
+- Define the concept precisely.
 
 ## Example
 
-## Gotchas
+- Add a small example or counterexample.
 
-## Related
+## Links
+
+- [[Home]]

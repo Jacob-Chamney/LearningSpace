@@ -5,11 +5,11 @@ by folder.
 
 ## Folder map
 
-- `input/` - one source set: `assignmentGoal.txt` plus lecture decks and docs.
+- `input/` - one source set: `assignmentGoal.txt` plus course documents.
 - `AssignmentGuide/` - generated assignment guide and tutor instructions.
 - `StudyGuide/` - generated study guide and answer key.
 - `Flashcards/` - generated flashcards from the study guide.
-- `Memory/` - coding memory vault. Follow `Memory/AGENTS.md`.
+- `Memory/` - learning memory vault. Follow `Memory/AGENTS.md`.
 - `scripts/` - guide, freshness, coverage, and release checks.
 - `template/` - sanitized memory-vault skeleton for releases.
 - `.githooks/` - Git pre-commit hook.
@@ -25,9 +25,9 @@ by folder.
 
 - Before working in a folder, read that folder's `AGENTS.md` if it exists.
 - Treat `input/` as the single source drop folder. Do not edit its documents.
-- `AssignmentGuide/` reads `input/assignmentGoal.txt` plus relevant input lectures
-  and memory. It produces `AssignmentGuide/assignment-guide.md`.
-- `StudyGuide/` reads only the lecture material in `input/`. It does not use
+- `AssignmentGuide/` reads `input/assignmentGoal.txt` plus relevant course
+  material and memory. It produces `AssignmentGuide/assignment-guide.md`.
+- `StudyGuide/` reads only the course material in `input/`. It does not use
   the memory vault. It produces `StudyGuide/study-guide.md` and
   `StudyGuide/study-guide-answers.md`.
 - `Flashcards/` reads `StudyGuide/study-guide.md` (and its answer key when
@@ -44,5 +44,5 @@ by folder.
 - The memory plugin auto-captures successful sessions outside `StudyGuide/`
   and `Flashcards/`.
 - Keep assignment work, study-guide work, and flashcard work separate.
-- Do not put full code or assignment solutions in `Memory/`.
+- Do not put full submissions, finished answers, or answer keys in `Memory/`.
 - Do not modify source documents unless the user asks.
