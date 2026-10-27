@@ -373,19 +373,64 @@ function saveChats() {
 function renderSidebarHistory() {
   const container = $("#chat-history");
   if (!container) return;
+  const clear = $("#clear-history");
   const chats = [...state.chats].sort((a, b) => b.updatedAt - a.updatedAt);
+  if (clear) clear.disabled = !chats.length;
   if (!chats.length) {
     container.innerHTML = '<p class="history-empty">No conversations yet.</p>';
     return;
   }
   container.innerHTML = chats.map((chat) => `
-    <button class="history-item ${state.activeChat?.id === chat.id ? "is-active" : ""}" type="button" data-chat-id="${escapeHtml(chat.id)}">
-      ${escapeHtml(chat.title)}
-    </button>
+    <div class="history-row">
+      <button class="history-item ${state.activeChat?.id === chat.id ? "is-active" : ""}" type="button" data-chat-id="${escapeHtml(chat.id)}">
+        ${escapeHtml(chat.title)}
+      </button>
+      <button class="history-delete" type="button" data-delete-chat="${escapeHtml(chat.id)}" aria-label="Delete ${escapeHtml(chat.title)}" title="Delete conversation">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+    </div>
   `).join("");
   $$(".history-item", container).forEach((button) => {
     button.addEventListener("click", () => activateChat(button.dataset.chatId));
   });
+  $$(".history-delete", container).forEach((button) => {
+    button.addEventListener("click", () => removeChat(button.dataset.deleteChat));
+  });
+}
+
+function removeChat(id) {
+  if (state.chatBusy) {
+    showToast("Wait for the current response first.");
+    return;
+  }
+  const chat = state.chats.find((item) => item.id === id);
+  if (!chat) return;
+  if (!window.confirm(`Delete "${chat.title}" from chat history?`)) return;
+  state.chats = state.chats.filter((item) => item.id !== id);
+  if (state.activeChat?.id === id) {
+    state.activeChat = state.chats[0] || makeChat();
+    state.view = "chat";
+  }
+  saveChats();
+  render();
+  showToast("Conversation deleted.");
+}
+
+function clearChatHistory() {
+  if (state.chatBusy) {
+    showToast("Wait for the current response first.");
+    return;
+  }
+  if (!state.chats.length) return;
+  if (!window.confirm("Delete all chat history? This only clears the dashboard history.")) return;
+  state.chats = [];
+  state.activeChat = makeChat();
+  state.view = "chat";
+  saveChats();
+  render();
+  showToast("Chat history cleared.");
 }
 
 function activateChat(id) {
@@ -906,29 +951,17 @@ async function setView(view) {
   render();
 }
 
-async function refresh() {
-  try {
-    const tasks = [loadStatus()];
-    if (state.view === "workspace") tasks.push(loadInput());
-    await Promise.all(tasks);
-    render();
-    showToast("Workspace refreshed.");
-  } catch (error) {
-    showError(error.message);
-  }
-}
-
 function bindEvents() {
   $$(".nav-item").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
   $("#new-chat-top").addEventListener("click", startNewChat);
+  $("#clear-history").addEventListener("click", clearChatHistory);
   $("#sidebar-toggle").addEventListener("click", toggleSidebar);
   $("#sidebar-close").addEventListener("click", () => {
     state.sidebarCollapsed = true;
     applySidebarState();
   });
-  $("#refresh").addEventListener("click", refresh);
   $("#settings").addEventListener("click", openSettings);
   $$("[data-close-settings]").forEach((element) => {
     element.addEventListener("click", closeSettings);
