@@ -160,9 +160,9 @@ Keep the temporary copy for inspection:
 Useful options:
 
 ```bash
-./install.sh --target ~/School/LearningSpace --yes
-./install.sh --target ~/School/LearningSpace --yes --no-opencode --no-glow
-./install.sh --target ~/School/LearningSpace --yes --skip-deps
+./install.sh --target ~/LearningSpace --yes
+./install.sh --target ~/LearningSpace --yes --no-opencode --no-glow
+./install.sh --target ~/LearningSpace --yes --skip-deps
 ```
 
 Pin an OpenCode version when reproducibility matters:
